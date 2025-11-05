@@ -1,0 +1,34 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: catalogos
+          uri: http://ms-catalogos:8081
+          predicates: [ Path=/api/catalogos/** ]
+          filters: [ StripPrefix=2 ]
+        - id: solicitudes
+          uri: http://ms-solicitudes:8082
+          predicates: [ Path=/api/solicitudes/** ]
+          filters: [ StripPrefix=2 ]
+        - id: operaciones
+          uri: http://ms-operaciones:8083
+          predicates: [ Path=/api/operaciones/** ]
+          filters: [ StripPrefix=2 ]
+
+springdoc:
+  swagger-ui:
+    path: /swagger
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"
+  endpoint:
+    health:
+      show-details: always
