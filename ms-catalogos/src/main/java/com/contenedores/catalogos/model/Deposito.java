@@ -32,4 +32,8 @@ public class Deposito {
 
     @Column(nullable = false)
     Boolean activo = true;
+
+    @Column(nullable = false)
+    Double costoEstadiaDiario;
+
 }
