@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16
+    image: postgres:15
     container_name: postgres
     environment:
       POSTGRES_USER: postgres
@@ -26,7 +26,7 @@ services:
       - "8081:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_FLYWAY_ENABLED=false
+      - SPRING_FLYWAY_ENABLED=true
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 10s

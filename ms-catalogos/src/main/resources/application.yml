@@ -5,7 +5,7 @@ spring:
   application:
     name: ms-catalogos
   datasource:
-    url: jdbc:postgresql://postgres:5432/catalogos
+    url: jdbc:postgresql://localhost:5433/catalogos
     username: postgres
     password: postgres
   jpa:
