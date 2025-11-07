@@ -34,7 +34,7 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -60,7 +60,7 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -86,7 +86,7 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 10

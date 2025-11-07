@@ -5,13 +5,14 @@ spring:
   application:
     name: ms-operaciones
   datasource:
-    url: jdbc:h2:mem:operaciones;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
-    username: sa
-    password:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:operaciones}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
+      hibernate.default_schema: public
       hibernate.format_sql: true
   flyway:
     enabled: ${SPRING_FLYWAY_ENABLED:true}
