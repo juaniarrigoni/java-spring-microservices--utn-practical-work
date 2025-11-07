@@ -1,47 +1,42 @@
 package com.contenedores.operaciones.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
-@Entity
-@Table(name = "TRAMOS")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@Entity @Table(name = "tramos")
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Tramo {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    UUID id;
-
-    @ManyToOne
-    @JoinColumn(name = "RUTA_ID")
-    Ruta ruta;
-
-    Integer orden;
-
-    String origenNombre;
-    BigDecimal origenLat;
-    BigDecimal origenLng;
-
-    String destinoNombre;
-    BigDecimal destinoLat;
-    BigDecimal destinoLng;
-
-    BigDecimal distanciaKmPlan;
-    Integer duracionMinPlan;
-
+    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ruta_id", nullable = false)
+    private Ruta ruta;
+    @Column(nullable = false)
+    private Integer orden;
+    private String origenNombre;
+    private BigDecimal origenLat;
+    private BigDecimal origenLng;
+    private String destinoNombre;
+    private BigDecimal destinoLat;
+    private BigDecimal destinoLng;
+    private BigDecimal distanciaKmPlan;
+    private Integer duracionMinPlan;
     @Enumerated(EnumType.STRING)
-    EstadoTramo estado;
+    private EstadoTramo estado;
+    private LocalDateTime fechaInicioReal;
+    private LocalDateTime fechaFinReal;
+    @OneToOne(mappedBy = "tramo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private AsignacionCamion asignacionCamion;
 
-    @OneToOne(mappedBy = "tramo", cascade = CascadeType.ALL)
-    AsignacionCamion asignacion;
-
-    @OneToMany(mappedBy = "tramo", cascade = CascadeType.ALL)
-    List<SeguimientoTramo> seguimientos = new ArrayList<>();
+    @PrePersist
+    protected void onCreate() {
+        if (id == null) { id = UUID.randomUUID(); }
+        if (estado == null) { estado = EstadoTramo.PENDIENTE; }
+    }
 }

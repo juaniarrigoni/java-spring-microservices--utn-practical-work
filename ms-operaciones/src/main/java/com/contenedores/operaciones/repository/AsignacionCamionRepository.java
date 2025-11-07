@@ -2,12 +2,12 @@ package com.contenedores.operaciones.repository;
 
 import com.contenedores.operaciones.model.AsignacionCamion;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.Optional;
+import org.springframework.stereotype.Repository;
+import java.util.List;
 import java.util.UUID;
 
+@Repository
 public interface AsignacionCamionRepository extends JpaRepository<AsignacionCamion, UUID> {
-
-    // Buscar la asignación actual de un camión
-    Optional<AsignacionCamion> findByCamionId(UUID camionId);
+    // MÉTODO AÑADIDO: para buscar asignaciones por camión
+    List<AsignacionCamion> findByCamionId(UUID camionId);
 }

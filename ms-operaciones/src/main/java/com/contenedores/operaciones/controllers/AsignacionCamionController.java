@@ -7,19 +7,28 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/asignaciones")
+@RequestMapping("/asignaciones") // Ruta más limpia sin el prefijo /api
 @RequiredArgsConstructor
 public class AsignacionCamionController {
 
     private final AsignacionCamionService asignacionService;
 
-    @Operation(summary = "Buscar asignación activa por ID de camión")
+    @Operation(summary = "Buscar todas las asignaciones para un camión por su ID")
     @GetMapping("/camion/{camionId}")
-    public ResponseEntity<Optional<AsignacionCamion>> buscarPorCamion(@PathVariable UUID camionId) {
-        return ResponseEntity.ok(asignacionService.buscarPorCamion(camionId));
+    public ResponseEntity<List<AsignacionCamion>> buscarPorCamion(@PathVariable UUID camionId) {
+        // Devuelve una lista, ya que un camión puede tener múltiples asignaciones
+        List<AsignacionCamion> asignaciones = asignacionService.buscarPorCamion(camionId);
+        return ResponseEntity.ok(asignaciones);
+    }
+
+    @Operation(summary = "Confirmar una asignación de tramo por parte del transportista")
+    @PutMapping("/{asignacionId}/confirmar")
+    public ResponseEntity<AsignacionCamion> confirmarAsignacion(@PathVariable UUID asignacionId) {
+        AsignacionCamion asignacionConfirmada = asignacionService.confirmarAsignacion(asignacionId);
+        return ResponseEntity.ok(asignacionConfirmada);
     }
 }

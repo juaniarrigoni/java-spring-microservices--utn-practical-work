@@ -1,32 +1,27 @@
-server:
-  port: 8082
-
 spring:
-  application:
-    name: ms-solicitudes
   datasource:
     url: jdbc:postgresql://postgres:5432/solicitudes
     username: postgres
     password: postgres
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
+    show-sql: true
     properties:
-      hibernate.default_schema: public
-      hibernate.format_sql: true
-  flyway:
-    enabled: false
-    locations: classpath:db/migration
-
-springdoc:
-  swagger-ui:
-    path: /swagger
-
+      hibernate:
+        format_sql: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8084/realms/master
+server:
+  port: 8082
 management:
   endpoints:
     web:
       exposure:
-        include: "health,info"
-  endpoint:
-    health:
-      show-details: always
+        include: health, info, prometheus
+  metrics:
+    tags:
+      application: ms-solicitudes

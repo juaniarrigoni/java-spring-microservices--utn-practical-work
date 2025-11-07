@@ -1,11 +1,9 @@
 package com.contenedores.catalogos.service;
 
-import com.contenedores.catalogos.dto.TarifaRequest;
-import com.contenedores.catalogos.dto.TarifaResponse;
 import com.contenedores.catalogos.model.Tarifa;
 import com.contenedores.catalogos.repository.TarifaRepository;
 import org.springframework.stereotype.Service;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -18,64 +16,43 @@ public class TarifaService {
         this.tarifaRepository = tarifaRepository;
     }
 
-    public TarifaResponse create(TarifaRequest request) {
-        validarTarifa(request);
-
-        Tarifa t = Tarifa.builder()
-                .nombre(request.getNombre().trim())
-                .precioBase(request.getPrecioBase())
-                .precioKm(request.getPrecioKm())
-                .precioKg(request.getPrecioKg())
-                .precioM3(request.getPrecioM3())
-                .vigenciaDesde(request.getVigenciaDesde())
-                .vigenciaHasta(request.getVigenciaHasta())
-                .activa(true)
-                .build();
-
-        Tarifa saved = tarifaRepository.save(t);
-        return toResponse(saved);
+    /**
+     * Crea una nueva tarifa.
+     * @param tarifa La entidad Tarifa a guardar.
+     * @return La entidad Tarifa guardada.
+     */
+    public Tarifa create(Tarifa tarifa) {
+        validarTarifa(tarifa);
+        return tarifaRepository.save(tarifa);
     }
 
-    // Reglas de negocio según el enunciado
-    private void validarTarifa(TarifaRequest request) {
-        if (request.getNombre() == null || request.getNombre().isBlank()) {
+    /**
+     * Obtiene una lista de todas las tarifas.
+     * @return Una lista de entidades Tarifa.
+     */
+    public List<Tarifa> findAll() {
+        return tarifaRepository.findAll();
+    }
+
+    private void validarTarifa(Tarifa tarifa) {
+        if (tarifa.getNombre() == null || tarifa.getNombre().isBlank()) {
             throw new IllegalArgumentException("El nombre de la tarifa es obligatorio.");
         }
-
-        if (request.getPrecioBase() == null || request.getPrecioBase() <= 0 ||
-            request.getPrecioKm() == null || request.getPrecioKm() <= 0 ||
-            request.getPrecioKg() == null || request.getPrecioKg() <= 0 ||
-            request.getPrecioM3() == null || request.getPrecioM3() <= 0) {
+        if (tarifa.getPrecioBase().compareTo(BigDecimal.ZERO) <= 0 ||
+                tarifa.getPrecioKm().compareTo(BigDecimal.ZERO) <= 0 ||
+                tarifa.getPrecioKg().compareTo(BigDecimal.ZERO) <= 0 ||
+                tarifa.getPrecioM3().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Todos los valores de precio deben ser mayores que cero.");
         }
-
-        LocalDate desde = request.getVigenciaDesde();
-        LocalDate hasta = request.getVigenciaHasta();
-
+        LocalDate desde = tarifa.getVigenciaDesde();
+        LocalDate hasta = tarifa.getVigenciaHasta();
         if (desde == null || hasta == null || hasta.isBefore(desde)) {
             throw new IllegalArgumentException("Las fechas de vigencia son inválidas.");
         }
-
-        // Evitar solapamiento con otras tarifas activas
         List<Tarifa> solapadas = tarifaRepository
                 .findByActivaTrueAndVigenciaDesdeBeforeAndVigenciaHastaAfter(hasta, desde);
-
         if (!solapadas.isEmpty()) {
             throw new IllegalStateException("Ya existe una tarifa activa que se solapa en el rango de fechas especificado.");
         }
-    }
-
-    private TarifaResponse toResponse(Tarifa t) {
-        return TarifaResponse.builder()
-                .id(t.getId())
-                .nombre(t.getNombre())
-                .precioBase(t.getPrecioBase())
-                .precioKm(t.getPrecioKm())
-                .precioKg(t.getPrecioKg())
-                .precioM3(t.getPrecioM3())
-                .vigenciaDesde(t.getVigenciaDesde())
-                .vigenciaHasta(t.getVigenciaHasta())
-                .activa(t.getActiva())
-                .build();
     }
 }

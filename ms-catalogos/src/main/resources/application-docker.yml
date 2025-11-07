@@ -1,31 +1,29 @@
-server:
-  port: 8081
-
 spring:
-  application:
-    name: ms-catalogos
   datasource:
     url: jdbc:postgresql://postgres:5432/catalogos
     username: postgres
     password: postgres
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update # Hibernate creará/actualizará las tablas
+    show-sql: true
     properties:
-      hibernate.format_sql: true
-  flyway:
-    enabled: false
-    locations: classpath:db/migration
-
-springdoc:
-  swagger-ui:
-    path: /swagger
-
+      hibernate:
+        format_sql: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # URL del emisor de Keycloak (ajusta la IP si no usas 'keycloak' como hostname)
+          # Por defecto, en Docker Compose, 'keycloak' resuelve a la IP del contenedor Keycloak
+          issuer-uri: http://keycloak:8084/realms/master
+server:
+  port: 8081 # Puerto interno para el microservicio
 management:
   endpoints:
     web:
       exposure:
-        include: "health,info"
-  endpoint:
-    health:
-      show-details: always
+        include: health, info, prometheus
+  metrics:
+    tags:
+      application: ms-catalogos

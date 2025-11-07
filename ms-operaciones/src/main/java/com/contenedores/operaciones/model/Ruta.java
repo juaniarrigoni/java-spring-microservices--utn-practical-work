@@ -1,32 +1,32 @@
 package com.contenedores.operaciones.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
-@Entity
-@Table(name = "RUTAS")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@Entity @Table(name = "rutas")
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Ruta {
+    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+    @Column(nullable = false, unique = true)
+    private UUID solicitudId;
+    private BigDecimal distanciaKmPlan;
+    private Integer duracionMinPlan;
+    private LocalDateTime fechaPlan;
+    @OneToMany(mappedBy = "ruta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy("orden ASC")
+    private List<Tramo> tramos;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    UUID id;
-
-    @Column(nullable = false)
-    UUID solicitudId; // referencia externa (ms-solicitudes)
-
-    BigDecimal distanciaKmPlan;
-    Integer duracionMinPlan;
-    LocalDateTime fechaPlan;
-
-    @OneToMany(mappedBy = "ruta", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<Tramo> tramos = new ArrayList<>();
+    @PrePersist
+    protected void onCreate() {
+        if (id == null) { id = UUID.randomUUID(); }
+        if (fechaPlan == null) { fechaPlan = LocalDateTime.now(); }
+    }
 }

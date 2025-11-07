@@ -1,60 +1,57 @@
 package com.contenedores.operaciones.service;
 
-import com.contenedores.operaciones.model.*;
+import com.contenedores.operaciones.model.AsignacionCamion;
+import com.contenedores.operaciones.model.EstadoTramo;
+import com.contenedores.operaciones.model.Tramo;
 import com.contenedores.operaciones.repository.AsignacionCamionRepository;
 import com.contenedores.operaciones.repository.TramoRepository;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
-@Transactional
 public class TramoService {
-
     private final TramoRepository tramoRepository;
-    private final AsignacionCamionRepository asignacionRepository;
+    private final AsignacionCamionRepository asignacionCamionRepository;
 
-    public List<Tramo> listarPorRuta(UUID rutaId) {
-        return tramoRepository.findByRutaId(rutaId);
+    public TramoService(TramoRepository tramoRepository, AsignacionCamionRepository asignacionCamionRepository) {
+        this.tramoRepository = tramoRepository;
+        this.asignacionCamionRepository = asignacionCamionRepository;
     }
 
-    public Tramo obtenerPorId(UUID id) {
-        return tramoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tramo no encontrado: " + id));
+    public Tramo asignarCamion(UUID tramoId, UUID camionId) {
+        Tramo tramo = tramoRepository.findById(tramoId)
+                .orElseThrow(() -> new EntityNotFoundException("Tramo no encontrado"));
+
+        // Aquí iría la validación para ver si el camión está disponible
+        // (requeriría una llamada a ms-catalogos)
+
+        AsignacionCamion asignacion = AsignacionCamion.builder()
+                .tramo(tramo)
+                .camionId(camionId)
+                .build();
+
+        asignacionCamionRepository.save(asignacion);
+
+        // CORREGIDO: el setter correcto es setAsignacionCamion
+        tramo.setAsignacionCamion(asignacion);
+        return tramo;
     }
 
-    public Tramo cambiarEstado(UUID tramoId, EstadoTramo nuevoEstado) {
-        Tramo tramo = obtenerPorId(tramoId);
-        tramo.setEstado(nuevoEstado);
+    public Tramo iniciarTramo(UUID tramoId) {
+        Tramo tramo = tramoRepository.findById(tramoId)
+                .orElseThrow(() -> new EntityNotFoundException("Tramo no encontrado"));
+        tramo.setEstado(EstadoTramo.EN_CURSO);
+        tramo.setFechaInicioReal(LocalDateTime.now());
         return tramoRepository.save(tramo);
     }
 
-    public void asignarCamion(UUID tramoId, UUID camionId) {
-        // Validar que el camión no esté en uso
-        boolean ocupado = asignacionRepository.findByCamionId(camionId)
-                .filter(a -> a.getTramo().getEstado() == EstadoTramo.EN_CURSO)
-                .isPresent();
-
-        if (ocupado) {
-            throw new RuntimeException("El camión ya está asignado a un tramo en curso.");
-        }
-
-        Tramo tramo = obtenerPorId(tramoId);
-
-        AsignacionCamion asignacion = new AsignacionCamion();
-        asignacion.setTramo(tramo);
-        asignacion.setCamionId(camionId);
-        asignacion.setFechaAsignacion(LocalDateTime.now());
-        asignacion.setConfirmado(Boolean.TRUE);
-
-        tramo.setAsignacion(asignacion);
-        tramo.setEstado(EstadoTramo.EN_CURSO);
-
-        tramoRepository.save(tramo);
+    public Tramo finalizarTramo(UUID tramoId) {
+        Tramo tramo = tramoRepository.findById(tramoId)
+                .orElseThrow(() -> new EntityNotFoundException("Tramo no encontrado"));
+        tramo.setEstado(EstadoTramo.COMPLETADO);
+        tramo.setFechaFinReal(LocalDateTime.now());
+        return tramoRepository.save(tramo);
     }
 }

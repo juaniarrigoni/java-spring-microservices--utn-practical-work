@@ -1,44 +1,31 @@
 package com.contenedores.catalogos.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-@Entity
-@Table(name = "TARIFA")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
-@Builder
+@Entity @Table(name = "tarifas")
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Tarifa {
+    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+    private String nombre;
+    private BigDecimal precioBase;
+    private BigDecimal precioKm;
+    private BigDecimal precioKg;
+    private BigDecimal precioM3;
+    private LocalDate vigenciaDesde;
+    private LocalDate vigenciaHasta;
+    private Boolean activa;
 
-    @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(columnDefinition = "UUID")
-    UUID id;
-
-    @Column(nullable = false)
-    String nombre;
-
-    @Column(nullable = false)
-    Double precioBase;
-
-    @Column(nullable = false)
-    Double precioKm;
-
-    @Column(nullable = false)
-    Double precioKg;
-
-    @Column(nullable = false)
-    Double precioM3;
-
-    @Column(nullable = false)
-    LocalDate vigenciaDesde;
-
-    LocalDate vigenciaHasta;
-
-    @Column(nullable = false)
-    Boolean activa = true;
+    @PrePersist
+    protected void onCreate() {
+        if (id == null) { id = UUID.randomUUID(); }
+        if (activa == null) { activa = true; }
+    }
 }

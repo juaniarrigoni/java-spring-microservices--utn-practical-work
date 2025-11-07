@@ -1,30 +1,30 @@
 server:
   port: 8080
-
 spring:
   application:
     name: api-gateway
   cloud:
     gateway:
-      routes:
-        - id: catalogos
-          uri: http://ms-catalogos:8081
-          predicates: [ Path=/api/catalogos/** ]
-          filters: [ StripPrefix=2 ]
-        - id: solicitudes
-          uri: http://ms-solicitudes:8082
-          predicates: [ Path=/api/solicitudes/** ]
-          filters: [ StripPrefix=2 ]
-        - id: operaciones
-          uri: http://ms-operaciones:8083
-          predicates: [ Path=/api/operaciones/** ]
-          filters: [ StripPrefix=2 ]
-
+      default-filters:
+        - DedupeResponseHeader=Vary Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*" # Permitir todos los orígenes para desarrollo. Ajustar en producción.
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
-  endpoint:
-    health:
-      show-details: always
+        include: health, info, prometheus
+  metrics:
+    tags:
+      application: api-gateway

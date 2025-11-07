@@ -1,39 +1,28 @@
 package com.contenedores.catalogos.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 import java.util.UUID;
 
-@Entity
-@Table(name = "DEPOSITO")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
-@Builder
+@Entity @Table(name = "depositos")
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Deposito {
+    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+    private String nombre;
+    private String direccion;
+    private BigDecimal latitud;
+    private BigDecimal longitud;
+    private Boolean activo;
+    private BigDecimal costoEstadiaDiario;
 
-    @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(columnDefinition = "UUID")
-    UUID id;
-
-    @Column(nullable = false)
-    String nombre;
-
-    @Column(nullable = false)
-    String direccion;
-
-    @Column(nullable = false)
-    Double lat;
-
-    @Column(nullable = false)
-    Double lng;
-
-    @Column(nullable = false)
-    Boolean activo = true;
-
-    @Column(nullable = false)
-    Double costoEstadiaDiario;
-
+    @PrePersist
+    protected void onCreate() {
+        if (id == null) { id = UUID.randomUUID(); }
+        if (activo == null) { activo = true; }
+    }
 }

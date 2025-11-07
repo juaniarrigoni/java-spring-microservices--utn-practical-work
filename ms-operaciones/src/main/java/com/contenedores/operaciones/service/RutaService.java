@@ -2,30 +2,24 @@ package com.contenedores.operaciones.service;
 
 import com.contenedores.operaciones.model.Ruta;
 import com.contenedores.operaciones.repository.RutaRepository;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
-import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
-@Transactional
 public class RutaService {
-
     private final RutaRepository rutaRepository;
 
-    public Ruta crearRuta(Ruta ruta) {
+    public RutaService(RutaRepository rutaRepository) {
+        this.rutaRepository = rutaRepository;
+    }
+
+    public Ruta create(Ruta ruta) {
+        // Aquí iría la lógica de negocio para crear una ruta,
+        // como calcular distancias con la API de Google, etc.
         return rutaRepository.save(ruta);
     }
 
-    public List<Ruta> listarRutas() {
+    public List<Ruta> findAll() {
         return rutaRepository.findAll();
-    }
-
-    public Ruta obtenerPorId(UUID id) {
-        return rutaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ruta no encontrada: " + id));
     }
 }

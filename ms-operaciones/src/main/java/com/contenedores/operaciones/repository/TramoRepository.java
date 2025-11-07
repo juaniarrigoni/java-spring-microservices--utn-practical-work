@@ -1,17 +1,13 @@
 package com.contenedores.operaciones.repository;
 
-import com.contenedores.operaciones.model.EstadoTramo;
 import com.contenedores.operaciones.model.Tramo;
 import org.springframework.data.jpa.repository.JpaRepository;
-
+import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+@Repository
 public interface TramoRepository extends JpaRepository<Tramo, UUID> {
-
-    // Buscar todos los tramos de una ruta
-    List<Tramo> findByRutaId(UUID rutaId);
-
-    // Buscar tramos por estado (pendientes, en curso, etc.)
-    List<Tramo> findByEstado(EstadoTramo estado);
+    // MÉTODO AÑADIDO: para buscar tramos por ruta
+    List<Tramo> findByRutaIdOrderByOrdenAsc(UUID rutaId);
 }

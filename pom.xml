@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.contenedores</groupId>
     <artifactId>tpi-contenedores</artifactId>
@@ -20,6 +22,9 @@
         <spring-cloud.version>2023.0.6</spring-cloud.version>
         <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
         <spring-boot.maven.plugin.version>${spring-boot.version}</spring-boot.maven.plugin.version>
+        <lombok.version>1.18.30</lombok.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> <!-- AÑADE ESTA LÍNEA -->
+
     </properties>
 
     <dependencyManagement>
@@ -31,7 +36,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- Import Spring Cloud BOM so starters don't need explicit versions -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -39,11 +43,12 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- Forzar versión de Flyway compatible con PostgreSQL 16 -->
+            <!-- Dependencia de Lombok -->
             <dependency>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-core</artifactId>
-                <version>10.12.0</version>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <scope>provided</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -62,6 +67,13 @@
                     <version>${maven.compiler.plugin.version}</version>
                     <configuration>
                         <release>${java.version}</release>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
                     </configuration>
                 </plugin>
             </plugins>
