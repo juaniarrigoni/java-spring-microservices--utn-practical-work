@@ -23,12 +23,18 @@ services:
     image: tpi/ms-catalogos:0.1.0
     container_name: ms-catalogos
     ports:
-      - "8081:8081"
+      - "8081:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_FLYWAY_ENABLED=false
+      - SERVER_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=catalogos
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -43,12 +49,18 @@ services:
     image: tpi/ms-solicitudes:0.1.0
     container_name: ms-solicitudes
     ports:
-      - "8082:8082"
+      - "8082:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_FLYWAY_ENABLED=false
+      - SERVER_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=solicitudes
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -63,12 +75,18 @@ services:
     image: tpi/ms-operaciones:0.1.0
     container_name: ms-operaciones
     ports:
-      - "8083:8083"
+      - "8083:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_FLYWAY_ENABLED=false
+      - SERVER_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=operaciones
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -87,6 +105,13 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_FLYWAY_ENABLED=false
+      - SERVER_PORT=8080
+      - CATALOGOS_HOST=ms-catalogos
+      - CATALOGOS_PORT=8080
+      - SOLICITUDES_HOST=ms-solicitudes
+      - SOLICITUDES_PORT=8080
+      - OPERACIONES_HOST=ms-operaciones
+      - OPERACIONES_PORT=8080
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
