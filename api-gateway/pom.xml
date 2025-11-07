@@ -22,11 +22,17 @@
                 </dependency>
 
 		<!-- Webflux (UI Swagger en gateway si querés) -->
-		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
-			<version>2.5.0</version>
-		</dependency>
+                <dependency>
+                        <groupId>org.springdoc</groupId>
+                        <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+                        <version>${springdoc.version}</version>
+                </dependency>
+
+                <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-configuration-processor</artifactId>
+                        <optional>true</optional>
+                </dependency>
 
 		<!-- Seguridad (lo activamos más adelante con Keycloak) -->
 		<dependency>
