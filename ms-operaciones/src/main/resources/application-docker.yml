@@ -1,13 +1,13 @@
 server:
-  port: 8083
+  port: ${SERVER_PORT:8080}
 
 spring:
   application:
     name: ms-operaciones
   datasource:
-    url: jdbc:postgresql://postgres:5432/operaciones
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:operaciones}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -15,7 +15,7 @@ spring:
       hibernate.default_schema: public
       hibernate.format_sql: true
   flyway:
-    enabled: false
+    enabled: ${SPRING_FLYWAY_ENABLED:false}
     locations: classpath:db/migration
 
 springdoc:
@@ -26,7 +26,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: "health,info"
+        include: health,info
   endpoint:
     health:
       show-details: always

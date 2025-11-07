@@ -1,24 +1,23 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   application:
     name: api-gateway
-  cloud:
-    gateway:
-      routes:
-        - id: catalogos
-          uri: http://ms-catalogos:8081
-          predicates: [ Path=/api/catalogos/** ]
-          filters: [ StripPrefix=2 ]
-        - id: solicitudes
-          uri: http://ms-solicitudes:8082
-          predicates: [ Path=/api/solicitudes/** ]
-          filters: [ StripPrefix=2 ]
-        - id: operaciones
-          uri: http://ms-operaciones:8083
-          predicates: [ Path=/api/operaciones/** ]
-          filters: [ StripPrefix=2 ]
+
+springdoc:
+  swagger-ui:
+    path: /swagger
+
+tpi:
+  gateway:
+    services:
+      catalogos:
+        uri: http://${CATALOGOS_HOST:localhost}:${CATALOGOS_PORT:8081}
+      solicitudes:
+        uri: http://${SOLICITUDES_HOST:localhost}:${SOLICITUDES_PORT:8082}
+      operaciones:
+        uri: http://${OPERACIONES_HOST:localhost}:${OPERACIONES_PORT:8083}
 
 management:
   endpoints:

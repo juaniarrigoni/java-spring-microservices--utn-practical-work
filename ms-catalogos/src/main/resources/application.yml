@@ -1,13 +1,13 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 spring:
   application:
     name: ms-catalogos
   datasource:
-    url: jdbc:postgresql://postgres:5432/catalogos
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:catalogos}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -15,7 +15,7 @@ spring:
       hibernate.default_schema: public
       hibernate.format_sql: true
   flyway:
-    enabled: true
+    enabled: ${SPRING_FLYWAY_ENABLED:true}
     locations: classpath:db/migration
 
 springdoc:
@@ -26,7 +26,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: "health,info"
+        include: health,info
   endpoint:
     health:
       show-details: always
