@@ -18,17 +18,9 @@ public class SecurityConfig {
                 // Deshabilitar CSRF porque usamos una API REST stateless
                 .csrf(AbstractHttpConfigurer::disable)
 
-                // Definir las reglas de autorización
+                // Permitir todas las peticiones
                 .authorizeHttpRequests(authorize -> authorize
-                        // Permitir el acceso público a todos los endpoints de Actuator
-                        .requestMatchers("/actuator/**").permitAll()
-
-                        // Requerir autenticación para cualquier otra petición
-                        .anyRequest().authenticated()
-                )
-
-                // Configurar el servidor para que valide tokens JWT (esto lo usaremos más adelante)
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+                        .anyRequest().permitAll());
 
         return http.build();
     }
