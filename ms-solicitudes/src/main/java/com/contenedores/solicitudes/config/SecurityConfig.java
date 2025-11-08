@@ -1,4 +1,4 @@
-package com.contenedores.catalogos.config;
+package com.contenedores.solicitudes.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
