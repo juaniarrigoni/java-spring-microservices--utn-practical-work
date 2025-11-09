@@ -16,6 +16,7 @@ public class Camion {
     @Column(unique = true, nullable = false)
     private String patente;
     private BigDecimal capacidadKg;
+    @Column(name = "volumen_m3")
     private BigDecimal volumenM3;
     private String tipo;
     private BigDecimal consumoCombustibleKm;
