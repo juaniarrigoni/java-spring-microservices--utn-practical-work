@@ -1,1 +1,0 @@
--- Baseline vacía. Iteración 1: crear CAMION, DEPOSITO, TARIFA.

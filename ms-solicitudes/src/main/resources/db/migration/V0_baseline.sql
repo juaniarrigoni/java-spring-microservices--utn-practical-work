@@ -1,1 +1,0 @@
--- baseline vacío para que Flyway arranque. Agregaremos V1__schema.sql en el sprint 1.
