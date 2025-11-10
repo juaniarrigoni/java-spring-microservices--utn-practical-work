@@ -13,11 +13,19 @@ import java.util.UUID;
 public class Deposito {
     @Id @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+    
     private String nombre;
     private String direccion;
+    
+    @Column(name = "latitud")
     private BigDecimal latitud;
+    
+    @Column(name = "longitud")
     private BigDecimal longitud;
+    
     private Boolean activo;
+    
+    @Column(name = "costo_estadia_diario")
     private BigDecimal costoEstadiaDiario;
 
     @PrePersist

@@ -18,7 +18,10 @@ public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+    
+    @Column(name = "razon_social")
     private String razonSocial;
+    
     private String cuit;
     private String email;
     private String telefono;

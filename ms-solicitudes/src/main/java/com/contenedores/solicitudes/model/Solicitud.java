@@ -21,35 +21,56 @@ public class Solicitud {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private EstadoSolicitud estadoActual; // CREADA/VALIDADA/PLANIFICADA/EN_CURSO/COMPLETADA/CANCELADA
+    @Column(name = "estado_actual", nullable = false)
+    private EstadoSolicitud estadoActual;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL) // Un contenedor por solicitud
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "contenedor_id", nullable = false)
     private Contenedor contenedor;
 
-    private UUID tarifaId; // "ref a ms-catalogos"
+    @Column(name = "tarifa_id")
+    private UUID tarifaId;
+    
+    @Column(name = "costo_estimado")
     private BigDecimal costoEstimado;
+    
+    @Column(name = "distancia_km_estimada")
     private Integer distanciaKmEstimada;
-    private LocalDateTime etaEstimado; // Estimated Time of Arrival
+    
+    @Column(name = "eta_estimado")
+    private LocalDateTime etaEstimado;
 
+    @Column(name = "origen_nombre")
     private String origenNombre;
+    
+    @Column(name = "origen_lat")
     private BigDecimal origenLat;
+    
+    @Column(name = "origen_lng")
     private BigDecimal origenLng;
+    
+    @Column(name = "destino_nombre")
     private String destinoNombre;
+    
+    @Column(name = "destino_lat")
     private BigDecimal destinoLat;
+    
+    @Column(name = "destino_lng")
     private BigDecimal destinoLng;
 
-    private BigDecimal costoReal; // Calculado al finalizar
-    private LocalDateTime tiempoRealEntrega; // Calculado al finalizar
+    @Column(name = "costo_real")
+    private BigDecimal costoReal;
+    
+    @Column(name = "tiempo_real_entrega")
+    private LocalDateTime tiempoRealEntrega;
 
     @PrePersist
     protected void onCreate() {

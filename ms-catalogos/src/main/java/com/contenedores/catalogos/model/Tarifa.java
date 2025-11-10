@@ -14,13 +14,27 @@ import java.util.UUID;
 public class Tarifa {
     @Id @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+    
     private String nombre;
+    
+    @Column(name = "precio_base")
     private BigDecimal precioBase;
+    
+    @Column(name = "precio_km")
     private BigDecimal precioKm;
+    
+    @Column(name = "precio_kg")
     private BigDecimal precioKg;
+    
+    @Column(name = "precio_m3")
     private BigDecimal precioM3;
+    
+    @Column(name = "vigencia_desde")
     private LocalDate vigenciaDesde;
+    
+    @Column(name = "vigencia_hasta")
     private LocalDate vigenciaHasta;
+    
     private Boolean activa;
 
     @PrePersist

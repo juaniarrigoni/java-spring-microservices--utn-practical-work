@@ -28,10 +28,13 @@ public class SolicitudEstadoHist {
     @Column(nullable = false)
     private EstadoSolicitud estado;
 
-    @Column(nullable = false)
+    @Column(name = "fecha_hora", nullable = false)
     private LocalDateTime fechaHora;
+    
     private String observacion;
-    private UUID actorId; // ID del usuario/sistema que realizó el cambio de estado
+    
+    @Column(name = "actor_id")
+    private UUID actorId;
 
     @PrePersist
     protected void onCreate() {
