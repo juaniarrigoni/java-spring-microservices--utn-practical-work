@@ -23,4 +23,12 @@
       </profile>
     </annotationProcessing>
   </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="api-gateway" options="" />
+      <module name="ms-catalogos" options="" />
+      <module name="ms-operaciones" options="" />
+      <module name="ms-solicitudes" options="" />
+    </option>
+  </component>
 </project>

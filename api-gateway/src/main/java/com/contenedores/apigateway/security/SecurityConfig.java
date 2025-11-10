@@ -2,8 +2,9 @@ package com.contenedores.apigateway.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
-import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity; // <-- Objeto correcto para WebFlux
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
@@ -11,17 +12,29 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) { // <-- Parámetro correcto
         http
+                // La sintaxis para CSRF es ligeramente diferente en WebFlux
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/actuator/**").permitAll() // Permitir acceso a health checks
-                        .pathMatchers("/eureka/**").permitAll() // Para un posible Eureka si lo agregamos
-                        .anyExchange().authenticated() // Todas las demás deben estar autenticadas
+
+                .authorizeExchange(exchange -> exchange.anyExchange()
+                        // Los patrones de ruta se definen directamente en 'pathMatchers'
+//                        .pathMatchers(
+//                                "/actuator/**",
+//                                "/webjars/**",
+//                                "/v3/api-docs/**",
+//                                "/api/*/swagger-ui.html",
+//                                "/api/*/swagger-ui/**)
+
+                                .permitAll()
+
+//                        // Cualquier otra petición requiere autenticación
+//                        .anyExchange().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {
-                    // Configuración JWT, el issuer-uri se toma de application.yml
-                }));
+
+                // La sintaxis para configurar JWT también usa Customizer
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+
         return http.build();
     }
 }

@@ -16,7 +16,8 @@ spring:
         jwt:
           # URL del emisor de Keycloak (ajusta la IP si no usas 'keycloak' como hostname)
           # Por defecto, en Docker Compose, 'keycloak' resuelve a la IP del contenedor Keycloak
-          issuer-uri: http://keycloak:8084/realms/master
+#          issuer-uri: http://keycloak:8084/realms/master
+          issuer-uri: http://keycloak:8084/realms/tpi-backend
 server:
   port: 8081 # Puerto interno para el microservicio
 management:

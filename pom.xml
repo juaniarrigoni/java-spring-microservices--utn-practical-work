@@ -2,6 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+    <!-- Usamos la estructura tradicional sin <parent> para evitar conflictos. -->
+
     <groupId>com.contenedores</groupId>
     <artifactId>tpi-contenedores</artifactId>
     <version>0.1.0-SNAPSHOT</version>
@@ -18,17 +21,20 @@
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
+        <!-- Versión de Spring Boot -->
         <spring-boot.version>3.3.3</spring-boot.version>
-        <spring-cloud.version>2023.0.6</spring-cloud.version>
+        <!-- Versión de Spring Cloud COMPATIBLE (2023.0.2 es la oficial para 3.3.x) -->
+        <spring-cloud.version>2023.0.2</spring-cloud.version>
+
         <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
         <spring-boot.maven.plugin.version>${spring-boot.version}</spring-boot.maven.plugin.version>
         <lombok.version>1.18.30</lombok.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> <!-- AÑADE ESTA LÍNEA -->
-
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- Importamos el BOM de Spring Boot para gestionar todas las dependencias de Spring. -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -36,6 +42,8 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- Importamos el BOM de Spring Cloud para gestionar las dependencias de Cloud. -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -43,7 +51,8 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- Dependencia de Lombok -->
+
+            <!-- Gestión de Lombok (necesaria si no usamos el parent) -->
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
@@ -56,11 +65,14 @@
     <build>
         <pluginManagement>
             <plugins>
+                <!-- Definimos el plugin de Spring Boot (necesario si no usamos el parent) -->
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${spring-boot.maven.plugin.version}</version>
                 </plugin>
+
+                <!-- Definimos el plugin de compilación (necesario si no usamos el parent) -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>

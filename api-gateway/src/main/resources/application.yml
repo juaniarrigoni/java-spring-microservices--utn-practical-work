@@ -7,19 +7,6 @@ spring:
     gateway:
       default-filters:
         - DedupeResponseHeader=Vary Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOrigins: "*" # Permitir todos los orígenes para desarrollo. Ajustar en producción.
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
-            allowedHeaders: "*"
-            allowCredentials: true
-            maxAge: 3600
 management:
   endpoints:
     web:
