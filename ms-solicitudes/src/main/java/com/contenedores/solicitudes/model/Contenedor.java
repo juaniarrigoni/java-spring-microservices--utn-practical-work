@@ -19,10 +19,16 @@ public class Contenedor {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-    private String codigo; // "ISO/placa interna"
+    
+    private String codigo;
+    
+    @Column(name = "peso_kg")
     private BigDecimal pesoKg;
+    
+    @Column(name = "volumen_m3")
     private BigDecimal volumenM3;
-    private String tipo; // "20/40/40HC, etc."
+    
+    private String tipo;
 
     @PrePersist
     protected void onCreate() {
