@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:15
+    image: postgres:16
     container_name: postgres
     environment:
       POSTGRES_USER: postgres
@@ -26,6 +26,7 @@ services:
       - "8081:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_FLYWAY_ENABLED=false
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 10s
@@ -45,6 +46,7 @@ services:
       - "8082:8082"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_FLYWAY_ENABLED=false
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
       interval: 10s
@@ -64,6 +66,7 @@ services:
       - "8083:8083"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_FLYWAY_ENABLED=false
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
       interval: 10s
@@ -83,6 +86,7 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_FLYWAY_ENABLED=false
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
@@ -98,19 +102,32 @@ services:
         condition: service_healthy
     networks: [tpi]
 
-  # keycloak (stub) — lo dejamos listo pero comentado hasta Iteración de seguridad:
-  # keycloak:
-  #   image: quay.io/keycloak/keycloak:24.0
-  #   container_name: keycloak
-  #   command: ["start-dev","--http-port=8084"]
-  #   environment:
-  #     - KEYCLOAK_ADMIN=admin
-  #     - KEYCLOAK_ADMIN_PASSWORD=admin
-  #   ports: ["8084:8084"]
-  #   networks: [tpi]
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.3
+    container_name: keycloak
+    command: ["start-dev"]
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin # En un entorno real, usar secrets
+      - KC_HTTP_PORT=8084 # Especificamos el puerto interno
+    ports:
+      - "8084:8084"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./keycloak-config:/opt/keycloak/data/import
+
+    networks:
+      - tpi
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
 
 networks:
   tpi: {}
 
 volumes:
   pgdata: {}
+  keycloak_data: {}

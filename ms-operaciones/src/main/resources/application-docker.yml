@@ -1,11 +1,13 @@
 spring:
+  application:
+    name: ms-operaciones
   datasource:
     url: jdbc:postgresql://postgres:5432/operaciones
     username: postgres
     password: postgres
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -15,13 +17,14 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
   security:
-    enabled: false
-    #oauth2:
-    #  resourceserver:
-    #    jwt:
-    #      issuer-uri: http://keycloak:8084/realms/master
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8084/realms/tpi-backend
+
 server:
   port: 8083
+
 management:
   endpoints:
     web:
