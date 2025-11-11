@@ -25,7 +25,8 @@ spring:
       resourceserver:
         jwt:
           # URL del emisor de Keycloak
-          issuer-uri: http://keycloak:8084/realms/master
+          #issuer-uri: http://keycloak:8084/realms/master
+          issuer-uri: http://keycloak:8084/realms/tpi-backend
 server:
   port: 8080
 management:

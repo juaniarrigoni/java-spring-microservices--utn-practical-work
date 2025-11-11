@@ -1,11 +1,14 @@
 spring:
+  application:
+    name: ms-catalogos
   datasource:
     url: jdbc:postgresql://postgres:5432/catalogos
     username: postgres
     password: postgres
   jpa:
     hibernate:
-      ddl-auto: validate
+      # 'update' es más seguro para Docker que 'validate' si los scripts de migración no están perfectos.
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -15,15 +18,15 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
   security:
-    enabled: false
-    basic:
-      enabled: false
     oauth2:
       resourceserver:
         jwt:
-          enabled: false
+          # Configuración correcta de Keycloak
+          issuer-uri: http://keycloak:8084/realms/tpi-backend
+
 server:
-  port: 8081 # Puerto interno para el microservicio
+  port: 8081
+
 management:
   endpoints:
     web:

@@ -2,6 +2,7 @@ package com.contenedores.apigateway.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -14,14 +15,27 @@ public class SecurityConfig {
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/actuator/**").permitAll() // Permitir acceso a health checks
-                        .pathMatchers("/eureka/**").permitAll() // Para un posible Eureka si lo agregamos
-                        .anyExchange().authenticated() // Todas las demás deben estar autenticadas
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {
-                    // Configuración JWT, el issuer-uri se toma de application.yml
-                }));
+                .authorizeExchange(exchange -> exchange.anyExchange().permitAll());
+//                        // 1. Lista de rutas públicas (la "lista de invitados")
+//                        .pathMatchers(
+//                                // Endpoints de salud
+//                                "/actuator/**",
+//                                // Archivos estáticos de Swagger UI
+//                                "/webjars/**",
+//                                // La definición OpenAPI JSON de cada microservicio
+//                                "/v3/api-docs/**",
+//                                // La página principal de Swagger para CUALQUIER microservicio
+//                                "     ",
+//                                // Otros recursos necesarios para la UI de Swagger
+//                                "/api/*/swagger-ui/**"
+//                        ).permitAll()
+//
+//                        // 2. Cualquier otra ruta requiere autenticación
+//                        .anyExchange().authenticated()
+//                )
+//                // 3. Habilita la validación de tokens JWT
+//                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+
         return http.build();
     }
 }

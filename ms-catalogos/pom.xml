@@ -13,6 +13,7 @@
         <description>Microservicio de Catálogos</description>
 
         <dependencies>
+                <!-- Dependencias Core de Spring -->
                 <dependency>
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-starter-web</artifactId>
@@ -21,6 +22,12 @@
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-starter-data-jpa</artifactId>
                 </dependency>
+                <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-actuator</artifactId>
+                </dependency>
+
+                <!-- Dependencias de Base de Datos y Migraciones -->
                 <dependency>
                         <groupId>org.postgresql</groupId>
                         <artifactId>postgresql</artifactId>
@@ -35,15 +42,8 @@
                         <artifactId>flyway-database-postgresql</artifactId>
                         <scope>runtime</scope>
                 </dependency>
-                <dependency>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-starter-actuator</artifactId>
-                </dependency>
-                <dependency>
-                        <groupId>org.projectlombok</groupId>
-                        <artifactId>lombok</artifactId>
-                        <scope>provided</scope>
-                </dependency>
+
+                <!-- Dependencias de Seguridad (Keycloak) -->
                 <dependency>
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-starter-security</artifactId>
@@ -56,11 +56,20 @@
                         <groupId>org.springframework.security</groupId>
                         <artifactId>spring-security-oauth2-jose</artifactId>
                 </dependency>
+
+                <!-- Dependencias de Utilidades y Documentación -->
+                <dependency>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                        <scope>provided</scope>
+                </dependency>
                 <dependency>
                         <groupId>org.springdoc</groupId>
                         <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-                        <version>2.5.0</version>
+                        <!-- CORRECCIÓN: Se eliminó la etiqueta <version>. La versión es gestionada por el POM padre. -->
                 </dependency>
+
+                <!-- Dependencias de Testing -->
                 <dependency>
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-starter-test</artifactId>
@@ -70,16 +79,10 @@
 
         <build>
                 <plugins>
+                        <!-- Este plugin es heredado y configurado desde el POM padre. -->
                         <plugin>
                                 <groupId>org.springframework.boot</groupId>
                                 <artifactId>spring-boot-maven-plugin</artifactId>
-                                <executions>
-                                        <execution>
-                                                <goals>
-                                                        <goal>repackage</goal>
-                                                </goals>
-                                        </execution>
-                                </executions>
                         </plugin>
                 </plugins>
         </build>
