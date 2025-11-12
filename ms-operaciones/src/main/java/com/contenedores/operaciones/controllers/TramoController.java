@@ -1,7 +1,8 @@
 package com.contenedores.operaciones.controllers;
 
-import com.contenedores.operaciones.model.Tramo;
+import com.contenedores.operaciones.dto.TramoEstadoResponse;
 import com.contenedores.operaciones.service.TramoService;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
@@ -15,13 +16,33 @@ public class TramoController {
         this.tramoService = tramoService;
     }
 
+    /**
+     * Endpoint para iniciar un tramo de traslado (REQ-7).
+     * Método: PUT
+     * Ruta: /tramos/{id}/iniciar
+     * Valida: Estado PENDIENTE, tiene camión asignado
+     * Acción: Cambia estado a EN_CURSO, registra fechaInicioReal
+     * Rol: Transportista
+     */
+    @Operation(summary = "Iniciar un tramo de traslado")
     @PutMapping("/{id}/iniciar")
-    public ResponseEntity<Tramo> iniciarTramo(@PathVariable UUID id) {
-        return ResponseEntity.ok(tramoService.iniciarTramo(id));
+    public ResponseEntity<TramoEstadoResponse> iniciarTramo(@PathVariable("id") UUID id) {
+        TramoEstadoResponse response = tramoService.iniciarTramo(id);
+        return ResponseEntity.ok(response);
     }
 
+    /**
+     * Endpoint para finalizar un tramo de traslado (REQ-7).
+     * Método: PUT
+     * Ruta: /tramos/{id}/finalizar
+     * Valida: Estado EN_CURSO
+     * Acción: Cambia estado a COMPLETADO, registra fechaFinReal
+     * Rol: Transportista
+     */
+    @Operation(summary = "Finalizar un tramo de traslado")
     @PutMapping("/{id}/finalizar")
-    public ResponseEntity<Tramo> finalizarTramo(@PathVariable UUID id) {
-        return ResponseEntity.ok(tramoService.finalizarTramo(id));
+    public ResponseEntity<TramoEstadoResponse> finalizarTramo(@PathVariable("id") UUID id) {
+        TramoEstadoResponse response = tramoService.finalizarTramo(id);
+        return ResponseEntity.ok(response);
     }
 }

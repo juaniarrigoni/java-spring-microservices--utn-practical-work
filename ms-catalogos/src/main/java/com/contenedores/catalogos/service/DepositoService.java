@@ -38,4 +38,52 @@ public class DepositoService {
     public List<Deposito> findAll() {
         return depositoRepository.findAll();
     }
+
+    /**
+     * Obtiene un depósito por su ID.
+     * @param id El UUID del depósito.
+     * @return La entidad Deposito encontrada.
+     */
+    public Deposito findById(java.util.UUID id) {
+        return depositoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Depósito no encontrado con ID: " + id));
+    }
+
+    /**
+     * Actualiza un depósito existente.
+     * @param id El UUID del depósito a actualizar.
+     * @param depositoActualizado Los datos actualizados del depósito.
+     * @return La entidad Deposito actualizada.
+     */
+    public Deposito update(java.util.UUID id, Deposito depositoActualizado) {
+        Deposito depositoExistente = findById(id);
+        
+        // Validaciones de coordenadas
+        if (depositoActualizado.getLatitud().compareTo(new BigDecimal("-90")) < 0 || 
+                depositoActualizado.getLatitud().compareTo(new BigDecimal("90")) > 0) {
+            throw new IllegalArgumentException("La latitud debe estar entre -90 y 90.");
+        }
+        if (depositoActualizado.getLongitud().compareTo(new BigDecimal("-180")) < 0 || 
+                depositoActualizado.getLongitud().compareTo(new BigDecimal("180")) > 0) {
+            throw new IllegalArgumentException("La longitud debe estar entre -180 y 180.");
+        }
+        
+        // Actualizar campos
+        depositoExistente.setNombre(depositoActualizado.getNombre());
+        depositoExistente.setDireccion(depositoActualizado.getDireccion());
+        depositoExistente.setLatitud(depositoActualizado.getLatitud());
+        depositoExistente.setLongitud(depositoActualizado.getLongitud());
+        depositoExistente.setCostoEstadiaDiario(depositoActualizado.getCostoEstadiaDiario());
+        
+        return depositoRepository.save(depositoExistente);
+    }
+
+    /**
+     * Elimina un depósito.
+     * @param id El UUID del depósito a eliminar.
+     */
+    public void delete(java.util.UUID id) {
+        Deposito deposito = findById(id);
+        depositoRepository.delete(deposito);
+    }
 }

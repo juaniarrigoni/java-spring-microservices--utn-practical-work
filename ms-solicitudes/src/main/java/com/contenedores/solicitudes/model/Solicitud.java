@@ -85,7 +85,7 @@ public class Solicitud {
             fechaCreacion = LocalDateTime.now();
         }
         if (estadoActual == null) {
-            estadoActual = EstadoSolicitud.CREADA;
+            estadoActual = EstadoSolicitud.BORRADOR;
         }
     }
 }

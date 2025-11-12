@@ -38,4 +38,56 @@ public class CamionService {
     public List<Camion> findAll() {
         return camionRepository.findAll();
     }
+
+    /**
+     * Obtiene un camión por su ID.
+     * @param id El UUID del camión.
+     * @return La entidad Camion encontrada.
+     */
+    public Camion findById(java.util.UUID id) {
+        return camionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Camión no encontrado con ID: " + id));
+    }
+
+    /**
+     * Actualiza un camión existente.
+     * @param id El UUID del camión a actualizar.
+     * @param camionActualizado Los datos actualizados del camión.
+     * @return La entidad Camion actualizada.
+     */
+    public Camion update(java.util.UUID id, Camion camionActualizado) {
+        Camion camionExistente = findById(id);
+        
+        // Verificar si se está cambiando la patente y si ya existe
+        if (!camionExistente.getPatente().equals(camionActualizado.getPatente().trim()) &&
+                camionRepository.existsByPatente(camionActualizado.getPatente().trim())) {
+            throw new IllegalArgumentException("Ya existe un camión con la patente: " + camionActualizado.getPatente());
+        }
+        
+        // Actualizar campos
+        camionExistente.setPatente(camionActualizado.getPatente().trim());
+        camionExistente.setTipo(camionActualizado.getTipo());
+        camionExistente.setNombreTransportista(camionActualizado.getNombreTransportista());
+        camionExistente.setTelefonoTransportista(camionActualizado.getTelefonoTransportista());
+        camionExistente.setCapacidadKg(camionActualizado.getCapacidadKg());
+        camionExistente.setVolumenM3(camionActualizado.getVolumenM3());
+        camionExistente.setCostoBaseKm(camionActualizado.getCostoBaseKm());
+        camionExistente.setConsumoCombustibleKm(camionActualizado.getConsumoCombustibleKm());
+        camionExistente.setActivo(camionActualizado.getActivo() != null ? camionActualizado.getActivo() : camionExistente.getActivo());
+        camionExistente.setDisponible(camionActualizado.getDisponible() != null ? camionActualizado.getDisponible() : camionExistente.getDisponible());
+        
+        return camionRepository.save(camionExistente);
+    }
+
+    /**
+     * Elimina (desactiva) un camión.
+     * En lugar de borrar físicamente, lo marca como inactivo.
+     * @param id El UUID del camión a desactivar.
+     */
+    public void delete(java.util.UUID id) {
+        Camion camion = findById(id);
+        camion.setActivo(false);
+        camion.setDisponible(false);
+        camionRepository.save(camion);
+    }
 }

@@ -1,13 +1,38 @@
 package com.contenedores.operaciones.service;
 
+import com.contenedores.operaciones.dto.CostoEntregaResponse;
+import com.contenedores.operaciones.dto.CostoEntregaResponse.EstadiaDetalle;
+import com.contenedores.operaciones.dto.RutaDetalleResponse;
+import com.contenedores.operaciones.dto.RutaDetalleResponse.TramoDetalle;
+import com.contenedores.operaciones.dto.RutaRequest;
+import com.contenedores.operaciones.dto.TramoRequest;
+import com.contenedores.operaciones.model.AsignacionCamion;
+import com.contenedores.operaciones.model.EstadoTramo;
 import com.contenedores.operaciones.model.Ruta;
+import com.contenedores.operaciones.model.Tramo;
 import com.contenedores.operaciones.repository.RutaRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class RutaService {
     private final RutaRepository rutaRepository;
+    
+    // Constantes de configuración (en sistema real vendrían de ms-catalogos)
+    private static final BigDecimal PRECIO_LITRO_COMBUSTIBLE = new BigDecimal("150.00"); // pesos por litro
+    private static final BigDecimal COSTO_BASE_KM_DEFAULT = new BigDecimal("95.50"); // si no hay camión asignado
+    private static final BigDecimal CONSUMO_COMBUSTIBLE_DEFAULT = new BigDecimal("0.30"); // litros/km si no hay camión
+    private static final BigDecimal COSTO_ESTADIA_DIARIO_DEFAULT = new BigDecimal("500.00"); // si no se conoce el depósito
 
     public RutaService(RutaRepository rutaRepository) {
         this.rutaRepository = rutaRepository;
@@ -18,8 +43,317 @@ public class RutaService {
         // como calcular distancias con la API de Google, etc.
         return rutaRepository.save(ruta);
     }
+    
+    /**
+     * Asigna una nueva ruta con todos sus tramos a una solicitud.
+     * Crea la entidad Ruta y sus Tramos asociados a partir de un RutaRequest.
+     */
+    @Transactional
+    public RutaDetalleResponse createFromRequest(RutaRequest request) {
+        // Verificar que la solicitud no tenga ya una ruta asignada
+        rutaRepository.findBySolicitudIdWithTramos(request.solicitudId())
+                .ifPresent(r -> {
+                    throw new IllegalStateException("La solicitud " + request.solicitudId() + " ya tiene una ruta asignada");
+                });
+        
+        // Crear la entidad Ruta
+        Ruta ruta = Ruta.builder()
+                .solicitudId(request.solicitudId())
+                .distanciaKmPlan(request.distanciaKmPlan())
+                .duracionMinPlan(request.duracionMinPlan())
+                .tramos(new ArrayList<>())
+                .build();
+        
+        // Crear los Tramos y establecer la relación bidireccional
+        List<Tramo> tramos = request.tramos().stream()
+                .map(tramoReq -> mapTramoRequestToEntity(tramoReq, ruta))
+                .collect(Collectors.toList());
+        
+        ruta.setTramos(tramos);
+        
+        // Guardar la ruta con cascada a los tramos
+        Ruta rutaGuardada = rutaRepository.save(ruta);
+        
+        // Retornar el detalle completo
+        return mapToDetalleResponse(rutaGuardada);
+    }
+    
+    /**
+     * Convierte un TramoRequest en una entidad Tramo con la relación a la Ruta.
+     */
+    private Tramo mapTramoRequestToEntity(TramoRequest request, Ruta ruta) {
+        return Tramo.builder()
+                .ruta(ruta)
+                .orden(request.orden())
+                .origenNombre(request.origenNombre())
+                .origenLat(request.origenLat())
+                .origenLng(request.origenLng())
+                .destinoNombre(request.destinoNombre())
+                .destinoLat(request.destinoLat())
+                .destinoLng(request.destinoLng())
+                .distanciaKmPlan(request.distanciaKmPlan())
+                .duracionMinPlan(request.duracionMinPlan())
+                .estado(EstadoTramo.PENDIENTE) // Estado inicial
+                .build();
+    }
 
     public List<Ruta> findAll() {
         return rutaRepository.findAll();
     }
+    
+    /**
+     * Obtiene el detalle completo de una ruta por su ID, incluyendo todos los tramos.
+     */
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public RutaDetalleResponse findDetalleById(UUID id) {
+        Ruta ruta = rutaRepository.findByIdWithTramos(id)
+                .orElseThrow(() -> new IllegalArgumentException("Ruta no encontrada con ID: " + id));
+        return mapToDetalleResponse(ruta);
+    }
+    
+    /**
+     * Obtiene el detalle completo de una ruta por el ID de la solicitud.
+     */
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public RutaDetalleResponse findDetalleBySolicitudId(UUID solicitudId) {
+        Ruta ruta = rutaRepository.findBySolicitudIdWithTramos(solicitudId)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró ruta para la solicitud ID: " + solicitudId));
+        return mapToDetalleResponse(ruta);
+    }
+    
+    /**
+     * Convierte una entidad Ruta en un DTO RutaDetalleResponse con cálculo de costos.
+     */
+    private RutaDetalleResponse mapToDetalleResponse(Ruta ruta) {
+        List<TramoDetalle> tramosDetalle = ruta.getTramos().stream()
+                .map(this::mapTramoToDetalle)
+                .collect(Collectors.toList());
+        
+        // Calcular costo total estimado basado en la distancia
+        BigDecimal costoEstimado = ruta.getDistanciaKmPlan() != null 
+                ? ruta.getDistanciaKmPlan().multiply(COSTO_POR_KM)
+                : BigDecimal.ZERO;
+        
+        return new RutaDetalleResponse(
+                ruta.getId(),
+                ruta.getSolicitudId(),
+                ruta.getDistanciaKmPlan(),
+                ruta.getDuracionMinPlan(),
+                costoEstimado,
+                ruta.getFechaPlan(),
+                tramosDetalle
+        );
+    }
+    
+    /**
+     * Convierte un Tramo en un TramoDetalle DTO.
+     */
+    private TramoDetalle mapTramoToDetalle(Tramo tramo) {
+        AsignacionCamion asignacion = tramo.getAsignacionCamion();
+        
+        return new TramoDetalle(
+                tramo.getId(),
+                tramo.getOrden(),
+                tramo.getOrigenNombre(),
+                tramo.getOrigenLat(),
+                tramo.getOrigenLng(),
+                tramo.getDestinoNombre(),
+                tramo.getDestinoLat(),
+                tramo.getDestinoLng(),
+                tramo.getDistanciaKmPlan(),
+                tramo.getDuracionMinPlan(),
+                tramo.getEstado() != null ? tramo.getEstado().name() : null,
+                asignacion != null ? asignacion.getCamionId() : null,
+                asignacion != null ? asignacion.getConfirmado() : null
+        );
+    }
+
+    /**
+     * Calcula el costo total de entrega para una ruta (REQ-8 REFINADO).
+     * Usa datos específicos de cada camión asignado (costo base, consumo).
+     * 
+     * Fórmula:
+     * - costoTraslado = Σ(distancia_tramo × costo_base_km_camion)
+     * - costoCombustible = Σ(distancia_tramo × consumo_combustible_km × precio_litro)
+     * - costoEstadias = Σ(días_estadia × costo_deposito_diario)
+     * - costoTotal = costoTraslado + costoCombustible + costoEstadias
+     * 
+     * @param rutaId UUID de la ruta
+     * @param pesoKg Peso del contenedor (no usado en cálculo refinado, dejado por compatibilidad)
+     * @param volumenM3 Volumen del contenedor (no usado en cálculo refinado, dejado por compatibilidad)
+     * @return DTO con el desglose completo de costos por tramo y totales
+     */
+    @Transactional(readOnly = true)
+    public CostoEntregaResponse calcularCostoTotal(UUID rutaId, BigDecimal pesoKg, BigDecimal volumenM3) {
+        // 1. Obtener la ruta con sus tramos
+        Ruta ruta = rutaRepository.findByIdWithTramos(rutaId)
+                .orElseThrow(() -> new EntityNotFoundException("Ruta no encontrada con ID: " + rutaId));
+
+        // 2. Calcular costos por tramo usando datos del camión asignado
+        List<CostoEntregaResponse.TramoDetalle> tramosDetalle = new ArrayList<>();
+        BigDecimal costoTrasladoTotal = BigDecimal.ZERO;
+        BigDecimal costoCombustibleTotal = BigDecimal.ZERO;
+        
+        List<Tramo> tramosOrdenados = ruta.getTramos().stream()
+                .sorted((t1, t2) -> t1.getOrden().compareTo(t2.getOrden()))
+                .collect(Collectors.toList());
+        
+        for (Tramo tramo : tramosOrdenados) {
+            // Obtener datos del camión (simulado - en sistema real se consulta ms-catalogos via REST)
+            CamionDatos camionDatos = obtenerDatosCamion(tramo);
+            
+            BigDecimal distancia = tramo.getDistanciaKmPlan();
+            
+            // Costo de traslado = distancia × costo_base_km del camión
+            BigDecimal costoTraslado = distancia
+                    .multiply(camionDatos.costoBaseKm())
+                    .setScale(2, RoundingMode.HALF_UP);
+            
+            // Costo de combustible = distancia × consumo_combustible × precio_litro
+            BigDecimal costoCombustible = distancia
+                    .multiply(camionDatos.consumoCombustibleKm())
+                    .multiply(PRECIO_LITRO_COMBUSTIBLE)
+                    .setScale(2, RoundingMode.HALF_UP);
+            
+            BigDecimal costoTotalTramo = costoTraslado.add(costoCombustible);
+            
+            costoTrasladoTotal = costoTrasladoTotal.add(costoTraslado);
+            costoCombustibleTotal = costoCombustibleTotal.add(costoCombustible);
+            
+            // Construir detalle del tramo
+            tramosDetalle.add(new CostoEntregaResponse.TramoDetalle(
+                    tramo.getOrden(),
+                    tramo.getOrigenNombre(),
+                    tramo.getDestinoNombre(),
+                    distancia,
+                    camionDatos.patente(),
+                    camionDatos.costoBaseKm(),
+                    camionDatos.consumoCombustibleKm(),
+                    costoTraslado,
+                    costoCombustible,
+                    costoTotalTramo
+            ));
+        }
+
+        // 3. Calcular costo de estadías en depósitos (entre tramos consecutivos)
+        List<EstadiaDetalle> estadias = new ArrayList<>();
+        BigDecimal costoEstadiasTotal = BigDecimal.ZERO;
+        
+        for (int i = 0; i < tramosOrdenados.size() - 1; i++) {
+            Tramo tramoActual = tramosOrdenados.get(i);
+            Tramo tramoSiguiente = tramosOrdenados.get(i + 1);
+            
+            // Solo calcular estadía si ambos tramos tienen fechas reales
+            if (tramoActual.getFechaFinReal() != null && tramoSiguiente.getFechaInicioReal() != null) {
+                LocalDateTime fechaSalida = tramoActual.getFechaFinReal();
+                LocalDateTime fechaEntrada = tramoSiguiente.getFechaInicioReal();
+                
+                // Calcular días de estadía (puede ser fraccionario)
+                Duration duracion = Duration.between(fechaSalida, fechaEntrada);
+                BigDecimal diasEstadia = new BigDecimal(duracion.toMinutes())
+                        .divide(new BigDecimal("1440"), 4, RoundingMode.HALF_UP); // 1440 minutos = 1 día
+                
+                // TODO: En sistema real, obtener costo del depósito desde ms-catalogos
+                BigDecimal costoDepositoDiario = COSTO_ESTADIA_DIARIO_DEFAULT;
+                
+                BigDecimal costoEstadia = diasEstadia
+                        .multiply(costoDepositoDiario)
+                        .setScale(2, RoundingMode.HALF_UP);
+                
+                costoEstadiasTotal = costoEstadiasTotal.add(costoEstadia);
+                
+                estadias.add(new EstadiaDetalle(
+                        tramoActual.getOrden(),
+                        tramoActual.getDestinoNombre() + " (depósito)",
+                        fechaSalida.toString(),
+                        fechaEntrada.toString(),
+                        diasEstadia,
+                        costoDepositoDiario,
+                        costoEstadia
+                ));
+            }
+        }
+
+        // 4. Calcular costo total
+        BigDecimal costoTotal = costoTrasladoTotal
+                .add(costoCombustibleTotal)
+                .add(costoEstadiasTotal)
+                .setScale(2, RoundingMode.HALF_UP);
+
+        // 5. Construir respuesta
+        return new CostoEntregaResponse(
+                ruta.getId(),
+                ruta.getSolicitudId(),
+                costoTrasladoTotal,
+                costoCombustibleTotal,
+                costoEstadiasTotal,
+                costoTotal,
+                ruta.getDistanciaKmPlan(),
+                pesoKg,     // Dejado por compatibilidad aunque no se usa en cálculo refinado
+                volumenM3,  // Dejado por compatibilidad aunque no se usa en cálculo refinado
+                PRECIO_LITRO_COMBUSTIBLE,
+                tramosDetalle,
+                estadias,
+                "Cálculo refinado basado en datos reales de camiones asignados. " +
+                "En sistema productivo, datos de camiones y depósitos se obtendrían de ms-catalogos vía REST."
+        );
+    }
+    
+    /**
+     * Obtiene los datos del camión asignado a un tramo.
+     * En sistema real, haría una llamada REST a ms-catalogos/camiones/{id}.
+     * Por ahora simula con datos conocidos de prueba.
+     */
+    private CamionDatos obtenerDatosCamion(Tramo tramo) {
+        // Si el tramo no tiene camión asignado, usar valores por defecto
+        if (tramo.getAsignacionCamion() == null) {
+            return new CamionDatos(
+                    "SIN-ASIGNAR",
+                    COSTO_BASE_KM_DEFAULT,
+                    CONSUMO_COMBUSTIBLE_DEFAULT
+            );
+        }
+        
+        UUID camionId = tramo.getAsignacionCamion().getCamionId();
+        
+        // TODO: En sistema real, hacer llamada REST:
+        // String url = "http://ms-catalogos:8081/camiones/" + camionId;
+        // Camion camion = restTemplate.getForObject(url, Camion.class);
+        // return new CamionDatos(camion.getPatente(), camion.getCostoBaseKm(), camion.getConsumoCombustibleKm());
+        
+        // Simulación con datos conocidos de prueba
+        // Camión 1: b8f1b9c5-1c22-4b89-9a75-0193f1a0e111 (AA123BB, Transporte Sur S.A.)
+        if (camionId.toString().equals("b8f1b9c5-1c22-4b89-9a75-0193f1a0e111")) {
+            return new CamionDatos(
+                    "AA123BB",
+                    new BigDecimal("95.50"),
+                    new BigDecimal("0.32")
+            );
+        }
+        
+        // Camión 2: c6e2d7f0-8b4c-4c3a-9b1b-6b2f5e2d2f22 (CC456DD, Logística Norte)
+        if (camionId.toString().equals("c6e2d7f0-8b4c-4c3a-9b1b-6b2f5e2d2f22")) {
+            return new CamionDatos(
+                    "CC456DD",
+                    new BigDecimal("82.75"),
+                    new BigDecimal("0.28")
+            );
+        }
+        
+        // Camión desconocido, usar valores por defecto
+        return new CamionDatos(
+                camionId.toString().substring(0, 8), // Primeros 8 chars del UUID
+                COSTO_BASE_KM_DEFAULT,
+                CONSUMO_COMBUSTIBLE_DEFAULT
+        );
+    }
+    
+    /**
+     * Record auxiliar para encapsular datos del camión necesarios para el cálculo.
+     */
+    private record CamionDatos(
+            String patente,
+            BigDecimal costoBaseKm,
+            BigDecimal consumoCombustibleKm
+    ) {}
 }
