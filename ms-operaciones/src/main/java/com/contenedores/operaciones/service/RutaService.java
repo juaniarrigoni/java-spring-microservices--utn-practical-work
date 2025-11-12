@@ -131,7 +131,7 @@ public class RutaService {
         
         // Calcular costo total estimado basado en la distancia
         BigDecimal costoEstimado = ruta.getDistanciaKmPlan() != null 
-                ? ruta.getDistanciaKmPlan().multiply(COSTO_POR_KM)
+                ? ruta.getDistanciaKmPlan().multiply(COSTO_BASE_KM_DEFAULT)
                 : BigDecimal.ZERO;
         
         return new RutaDetalleResponse(
