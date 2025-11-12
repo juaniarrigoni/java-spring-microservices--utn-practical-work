@@ -22,13 +22,16 @@ public class SolicitudService {
     private final SolicitudRepository solicitudRepository;
     private final ClienteRepository clienteRepository;
     private final ContenedorRepository contenedorRepository;
+    private final com.contenedores.solicitudes.repository.HistorialEstadoRepository historialEstadoRepository;
 
     public SolicitudService(SolicitudRepository solicitudRepository, 
                            ClienteRepository clienteRepository,
-                           ContenedorRepository contenedorRepository) {
+                           ContenedorRepository contenedorRepository,
+                           com.contenedores.solicitudes.repository.HistorialEstadoRepository historialEstadoRepository) {
         this.solicitudRepository = solicitudRepository;
         this.clienteRepository = clienteRepository;
         this.contenedorRepository = contenedorRepository;
+        this.historialEstadoRepository = historialEstadoRepository;
     }
 
     /**
@@ -250,9 +253,34 @@ public class SolicitudService {
         solicitud.setCostoReal(costoReal);
         solicitud.setTiempoRealEntrega(tiempoRealEntrega);
         
-        // Actualizar estado a completada
-        solicitud.setEstadoActual(EstadoSolicitud.ENTREGADA);
+        // Actualizar estado a completada (con historial)
+        solicitud.cambiarEstado(EstadoSolicitud.ENTREGADA, "Entrega finalizada. Costo real: " + costoReal);
         
         return solicitudRepository.save(solicitud);
+    }
+    
+    /**
+     * Obtiene el historial completo de cambios de estado de una solicitud.
+     * El historial se devuelve ordenado cronológicamente.
+     * 
+     * @param solicitudId UUID de la solicitud
+     * @return Lista de registros de historial ordenados por fecha
+     */
+    @Transactional(readOnly = true)
+    public List<com.contenedores.solicitudes.dto.HistorialEstadoResponse> obtenerHistorialEstados(UUID solicitudId) {
+        // Verificar que la solicitud existe
+        findById(solicitudId);
+        
+        // Obtener historial ordenado cronológicamente
+        return historialEstadoRepository.findBySolicitudIdOrderByFechaCambioAsc(solicitudId)
+                .stream()
+                .map(h -> new com.contenedores.solicitudes.dto.HistorialEstadoResponse(
+                        h.getId(),
+                        h.getEstadoAnterior(),
+                        h.getEstadoNuevo(),
+                        h.getFechaCambio(),
+                        h.getObservaciones()
+                ))
+                .collect(Collectors.toList());
     }
 }

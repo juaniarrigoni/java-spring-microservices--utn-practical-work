@@ -135,4 +135,16 @@ public class SolicitudesController {
         );
         return ResponseEntity.ok(solicitudFinalizada);
     }
+    
+    /**
+     * Obtener historial de estados de una solicitud (seguimiento cronológico).
+     * Método: GET
+     * Ruta: /api/solicitudes/{id}/historial
+     * Rol: Cliente / Operador
+     */
+    @GetMapping("/{id}/historial")
+    public ResponseEntity<List<com.contenedores.solicitudes.dto.HistorialEstadoResponse>> obtenerHistorialEstados(@PathVariable UUID id) {
+        List<com.contenedores.solicitudes.dto.HistorialEstadoResponse> historial = solicitudService.obtenerHistorialEstados(id);
+        return ResponseEntity.ok(historial);
+    }
 }

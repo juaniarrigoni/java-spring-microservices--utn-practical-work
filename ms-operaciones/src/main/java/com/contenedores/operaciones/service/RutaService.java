@@ -33,6 +33,8 @@ public class RutaService {
     private static final BigDecimal COSTO_BASE_KM_DEFAULT = new BigDecimal("95.50"); // si no hay camión asignado
     private static final BigDecimal CONSUMO_COMBUSTIBLE_DEFAULT = new BigDecimal("0.30"); // litros/km si no hay camión
     private static final BigDecimal COSTO_ESTADIA_DIARIO_DEFAULT = new BigDecimal("500.00"); // si no se conoce el depósito
+    private static final BigDecimal CARGO_GESTION_POR_TRAMO = new BigDecimal("2500.00"); // cargo fijo por gestión de cada tramo
+    private static final BigDecimal VELOCIDAD_PROMEDIO_KM_H = new BigDecimal("60.0"); // velocidad promedio para calcular duración estimada
 
     public RutaService(RutaRepository rutaRepository) {
         this.rutaRepository = rutaRepository;
@@ -82,6 +84,16 @@ public class RutaService {
      * Convierte un TramoRequest en una entidad Tramo con la relación a la Ruta.
      */
     private Tramo mapTramoRequestToEntity(TramoRequest request, Ruta ruta) {
+        // Calcular duración estimada si no viene especificada
+        Integer duracionMinPlan = request.duracionMinPlan();
+        if (duracionMinPlan == null && request.distanciaKmPlan() != null) {
+            // Fórmula: duracion_minutos = (distancia_km / velocidad_km_h) × 60
+            duracionMinPlan = request.distanciaKmPlan()
+                    .divide(VELOCIDAD_PROMEDIO_KM_H, 2, RoundingMode.HALF_UP)
+                    .multiply(new BigDecimal("60"))
+                    .intValue();
+        }
+        
         return Tramo.builder()
                 .ruta(ruta)
                 .orden(request.orden())
@@ -92,7 +104,7 @@ public class RutaService {
                 .destinoLat(request.destinoLat())
                 .destinoLng(request.destinoLng())
                 .distanciaKmPlan(request.distanciaKmPlan())
-                .duracionMinPlan(request.duracionMinPlan())
+                .duracionMinPlan(duracionMinPlan)
                 .estado(EstadoTramo.PENDIENTE) // Estado inicial
                 .build();
     }
@@ -274,19 +286,27 @@ public class RutaService {
             }
         }
 
-        // 4. Calcular costo total
+        // 4. Calcular cargo de gestión (fijo por cantidad de tramos)
+        int cantidadTramos = tramosOrdenados.size();
+        BigDecimal cargoGestionTotal = CARGO_GESTION_POR_TRAMO
+                .multiply(new BigDecimal(cantidadTramos))
+                .setScale(2, RoundingMode.HALF_UP);
+
+        // 5. Calcular costo total
         BigDecimal costoTotal = costoTrasladoTotal
                 .add(costoCombustibleTotal)
                 .add(costoEstadiasTotal)
+                .add(cargoGestionTotal)
                 .setScale(2, RoundingMode.HALF_UP);
 
-        // 5. Construir respuesta
+        // 6. Construir respuesta
         return new CostoEntregaResponse(
                 ruta.getId(),
                 ruta.getSolicitudId(),
                 costoTrasladoTotal,
                 costoCombustibleTotal,
                 costoEstadiasTotal,
+                cargoGestionTotal,
                 costoTotal,
                 ruta.getDistanciaKmPlan(),
                 pesoKg,     // Dejado por compatibilidad aunque no se usa en cálculo refinado
@@ -347,6 +367,145 @@ public class RutaService {
                 CONSUMO_COMBUSTIBLE_DEFAULT
         );
     }
+    
+    /**
+     * Calcula una tarifa aproximada ANTES de crear la ruta.
+     * Usa valores promedio de camiones elegibles según las características del contenedor.
+     * 
+     * @param request Datos para estimar: distancia, cantidad de tramos, peso y volumen del contenedor
+     * @return Estimación de costo basada en promedios
+     */
+    @Transactional(readOnly = true)
+    public com.contenedores.operaciones.dto.TarifaAproximadaResponse calcularTarifaAproximada(
+            com.contenedores.operaciones.dto.TarifaAproximadaRequest request) {
+        
+        // 1. Obtener camiones elegibles (simulado - en sistema real consulta ms-catalogos)
+        // Filtro: camiones con capacidad suficiente para el contenedor
+        List<CamionElegible> camionesElegibles = obtenerCamionesElegibles(
+                request.contenedorPesoKg(), 
+                request.contenedorVolumenM3()
+        );
+        
+        if (camionesElegibles.isEmpty()) {
+            throw new IllegalStateException(
+                "No hay camiones disponibles con capacidad suficiente para el contenedor especificado. " +
+                "Peso: " + request.contenedorPesoKg() + " kg, Volumen: " + request.contenedorVolumenM3() + " m³"
+            );
+        }
+        
+        // 2. Calcular valores promedio de los camiones elegibles
+        BigDecimal costoBaseKmPromedio = camionesElegibles.stream()
+                .map(CamionElegible::costoBaseKm)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .divide(new BigDecimal(camionesElegibles.size()), 2, RoundingMode.HALF_UP);
+        
+        BigDecimal consumoCombustiblePromedio = camionesElegibles.stream()
+                .map(CamionElegible::consumoCombustibleKm)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .divide(new BigDecimal(camionesElegibles.size()), 4, RoundingMode.HALF_UP);
+        
+        // 3. Calcular componentes del costo estimado
+        
+        // Cargo de gestión
+        BigDecimal cargoGestionEstimado = CARGO_GESTION_POR_TRAMO
+                .multiply(new BigDecimal(request.cantidadTramos()))
+                .setScale(2, RoundingMode.HALF_UP);
+        
+        // Costo de traslado estimado
+        BigDecimal costoTrasladoEstimado = request.distanciaKmEstimada()
+                .multiply(costoBaseKmPromedio)
+                .setScale(2, RoundingMode.HALF_UP);
+        
+        // Costo de combustible estimado
+        BigDecimal costoCombustibleEstimado = request.distanciaKmEstimada()
+                .multiply(consumoCombustiblePromedio)
+                .multiply(PRECIO_LITRO_COMBUSTIBLE)
+                .setScale(2, RoundingMode.HALF_UP);
+        
+        // Costo total estimado (sin estadías porque no se conocen aún)
+        BigDecimal costoTotalEstimado = cargoGestionEstimado
+                .add(costoTrasladoEstimado)
+                .add(costoCombustibleEstimado)
+                .setScale(2, RoundingMode.HALF_UP);
+        
+        // 4. Construir respuesta
+        return new com.contenedores.operaciones.dto.TarifaAproximadaResponse(
+                request.solicitudId(),
+                request.distanciaKmEstimada(),
+                request.cantidadTramos(),
+                costoBaseKmPromedio,
+                consumoCombustiblePromedio,
+                camionesElegibles.size(),
+                cargoGestionEstimado,
+                costoTrasladoEstimado,
+                costoCombustibleEstimado,
+                costoTotalEstimado,
+                PRECIO_LITRO_COMBUSTIBLE,
+                "Estimación basada en " + camionesElegibles.size() + " camiones elegibles. " +
+                "No incluye costos de estadías en depósitos (se calcularán al finalizar). " +
+                "En sistema productivo, los datos de camiones se consultarían de ms-catalogos vía REST."
+        );
+    }
+    
+    /**
+     * Obtiene lista de camiones elegibles según capacidad requerida (simulado).
+     * En sistema real, consultaría ms-catalogos con filtros.
+     */
+    private List<CamionElegible> obtenerCamionesElegibles(BigDecimal pesoRequerido, BigDecimal volumenRequerido) {
+        List<CamionElegible> elegibles = new ArrayList<>();
+        
+        // Camión 1: AA123BB (25,000 kg / 60 m³)
+        CamionElegible camion1 = new CamionElegible(
+                "AA123BB",
+                new BigDecimal("25000"),
+                new BigDecimal("60.0"),
+                new BigDecimal("95.50"),
+                new BigDecimal("0.28")
+        );
+        
+        // Camión 2: CC456DD (18,000 kg / 45 m³)
+        CamionElegible camion2 = new CamionElegible(
+                "CC456DD",
+                new BigDecimal("18000"),
+                new BigDecimal("45.0"),
+                new BigDecimal("88.00"),
+                new BigDecimal("0.25")
+        );
+        
+        // Camión 3: EE789FF (30,000 kg / 75 m³)
+        CamionElegible camion3 = new CamionElegible(
+                "EE789FF",
+                new BigDecimal("30000"),
+                new BigDecimal("75.0"),
+                new BigDecimal("105.00"),
+                new BigDecimal("0.35")
+        );
+        
+        // Filtrar solo los que tienen capacidad suficiente
+        List<CamionElegible> todos = List.of(camion1, camion2, camion3);
+        
+        for (CamionElegible camion : todos) {
+            boolean cumplePeso = pesoRequerido == null || pesoRequerido.compareTo(camion.capacidadKg()) <= 0;
+            boolean cumpleVolumen = volumenRequerido == null || volumenRequerido.compareTo(camion.volumenM3()) <= 0;
+            
+            if (cumplePeso && cumpleVolumen) {
+                elegibles.add(camion);
+            }
+        }
+        
+        return elegibles;
+    }
+    
+    /**
+     * Record auxiliar para encapsular datos de camiones elegibles.
+     */
+    private record CamionElegible(
+            String patente,
+            BigDecimal capacidadKg,
+            BigDecimal volumenM3,
+            BigDecimal costoBaseKm,
+            BigDecimal consumoCombustibleKm
+    ) {}
     
     /**
      * Record auxiliar para encapsular datos del camión necesarios para el cálculo.

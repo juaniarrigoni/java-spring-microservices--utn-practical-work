@@ -95,4 +95,23 @@ public class RutaController {
         CostoEntregaResponse costo = rutaService.calcularCostoTotal(id, pesoKg, volumenM3);
         return ResponseEntity.ok(costo);
     }
+    
+    /**
+     * Calcula una tarifa APROXIMADA antes de crear la ruta.
+     * Usa valores promedio de camiones elegibles según las características del contenedor.
+     * Útil para dar al cliente una estimación de costo antes de confirmar el envío.
+     * 
+     * Método: POST
+     * Ruta: /rutas/tarifa-aproximada
+     * Rol: Cliente / Operador
+     */
+    @Operation(summary = "Calcular tarifa aproximada basada en promedios de camiones elegibles")
+    @PostMapping("/tarifa-aproximada")
+    public ResponseEntity<com.contenedores.operaciones.dto.TarifaAproximadaResponse> calcularTarifaAproximada(
+            @RequestBody com.contenedores.operaciones.dto.TarifaAproximadaRequest request
+    ) {
+        com.contenedores.operaciones.dto.TarifaAproximadaResponse tarifa = 
+                rutaService.calcularTarifaAproximada(request);
+        return ResponseEntity.ok(tarifa);
+    }
 }
