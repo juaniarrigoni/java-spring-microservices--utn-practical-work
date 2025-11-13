@@ -1,3 +1,4 @@
+// RUTA: api-gateway/src/main/java/com/contenedores/apigateway/security/SecurityConfig.java
 package com.contenedores.apigateway.security;
 
 import org.springframework.context.annotation.Bean;
@@ -15,26 +16,19 @@ public class SecurityConfig {
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .authorizeExchange(exchange -> exchange.anyExchange().permitAll());
-//                        // 1. Lista de rutas públicas (la "lista de invitados")
-//                        .pathMatchers(
-//                                // Endpoints de salud
-//                                "/actuator/**",
-//                                // Archivos estáticos de Swagger UI
-//                                "/webjars/**",
-//                                // La definición OpenAPI JSON de cada microservicio
-//                                "/v3/api-docs/**",
-//                                // La página principal de Swagger para CUALQUIER microservicio
-//                                "     ",
-//                                // Otros recursos necesarios para la UI de Swagger
-//                                "/api/*/swagger-ui/**"
-//                        ).permitAll()
-//
-//                        // 2. Cualquier otra ruta requiere autenticación
-//                        .anyExchange().authenticated()
-//                )
-//                // 3. Habilita la validación de tokens JWT
-//                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+                .authorizeExchange(exchange -> exchange
+                        // 1. Lista de rutas públicas (Swagger, Health checks)
+                        .pathMatchers(
+                                "/actuator/**",
+                                "/api/*/swagger-ui.html",
+                                "/api/*/swagger-ui/**",
+                                "/api/*/v3/api-docs"
+                        ).permitAll()
+                        // 2. Cualquier otra ruta requiere un token JWT válido
+                        .anyExchange().authenticated()
+                )
+                // 3. Habilita la validación de tokens JWT
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
         return http.build();
     }
