@@ -18,6 +18,23 @@ services:
       retries: 10
       start_period: 10s
 
+  osrm-backend:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    container_name: osrm-backend
+    volumes:
+      - ${OSRM_DATA_PATH}:/data
+    command: osrm-routed --algorithm ch /data/argentina-latest.osrm
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks: [tpi]
+    restart: unless-stopped
+
   ms-catalogos:
     build: ../ms-catalogos
     image: tpi/ms-catalogos:0.1.0
@@ -64,6 +81,7 @@ services:
       - "8083:8083"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - OSRM_URL=http://osrm-backend:5000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
       interval: 10s
@@ -72,6 +90,8 @@ services:
       start_period: 45s
     depends_on:
       postgres:
+        condition: service_healthy
+      osrm-backend:
         condition: service_healthy
     networks: [tpi]
 
