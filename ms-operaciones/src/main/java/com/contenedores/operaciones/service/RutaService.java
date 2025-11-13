@@ -1,5 +1,6 @@
 package com.contenedores.operaciones.service;
 
+import com.contenedores.operaciones.client.CatalogosClient;
 import com.contenedores.operaciones.dto.CostoEntregaResponse;
 import com.contenedores.operaciones.dto.CostoEntregaResponse.EstadiaDetalle;
 import com.contenedores.operaciones.dto.RutaDetalleResponse;
@@ -12,6 +13,7 @@ import com.contenedores.operaciones.model.Ruta;
 import com.contenedores.operaciones.model.Tramo;
 import com.contenedores.operaciones.repository.RutaRepository;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,19 +27,53 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class RutaService {
     private final RutaRepository rutaRepository;
+    private final CatalogosClient catalogosClient;
     
-    // Constantes de configuración (en sistema real vendrían de ms-catalogos)
-    private static final BigDecimal PRECIO_LITRO_COMBUSTIBLE = new BigDecimal("150.00"); // pesos por litro
-    private static final BigDecimal COSTO_BASE_KM_DEFAULT = new BigDecimal("95.50"); // si no hay camión asignado
-    private static final BigDecimal CONSUMO_COMBUSTIBLE_DEFAULT = new BigDecimal("0.30"); // litros/km si no hay camión
-    private static final BigDecimal COSTO_ESTADIA_DIARIO_DEFAULT = new BigDecimal("500.00"); // si no se conoce el depósito
-    private static final BigDecimal CARGO_GESTION_POR_TRAMO = new BigDecimal("2500.00"); // cargo fijo por gestión de cada tramo
-    private static final BigDecimal VELOCIDAD_PROMEDIO_KM_H = new BigDecimal("60.0"); // velocidad promedio para calcular duración estimada
+    // Constantes de fallback (si ms-catalogos no está disponible)
+    private static final BigDecimal PRECIO_LITRO_COMBUSTIBLE_FALLBACK = new BigDecimal("150.00");
+    private static final BigDecimal COSTO_BASE_KM_DEFAULT_FALLBACK = new BigDecimal("95.50");
+    private static final BigDecimal CONSUMO_COMBUSTIBLE_DEFAULT = new BigDecimal("0.30");
+    private static final BigDecimal COSTO_ESTADIA_DIARIO_DEFAULT_FALLBACK = new BigDecimal("500.00");
+    private static final BigDecimal CARGO_GESTION_POR_TRAMO_FALLBACK = new BigDecimal("2500.00");
+    private static final BigDecimal VELOCIDAD_PROMEDIO_KM_H_FALLBACK = new BigDecimal("60.0");
 
-    public RutaService(RutaRepository rutaRepository) {
+    public RutaService(RutaRepository rutaRepository, CatalogosClient catalogosClient) {
         this.rutaRepository = rutaRepository;
+        this.catalogosClient = catalogosClient;
+    }
+    
+    /**
+     * Obtiene la configuración de tarifas desde ms-catalogos o usa valores por defecto
+     */
+    private CatalogosClient.ConfiguracionTarifaDTO obtenerConfiguracionTarifas() {
+        try {
+            return catalogosClient.obtenerConfiguracionActiva();
+        } catch (Exception e) {
+            log.warn("No se pudo obtener configuración de tarifas desde ms-catalogos. Usando valores por defecto. Error: {}", 
+                e.getMessage());
+            return new CatalogosClient.ConfiguracionTarifaDTO(
+                PRECIO_LITRO_COMBUSTIBLE_FALLBACK,
+                CARGO_GESTION_POR_TRAMO_FALLBACK,
+                VELOCIDAD_PROMEDIO_KM_H_FALLBACK,
+                COSTO_ESTADIA_DIARIO_DEFAULT_FALLBACK
+            );
+        }
+    }
+    
+    /**
+     * Obtiene el costo base por km según el volumen del contenedor
+     */
+    private BigDecimal obtenerCostoBaseKmPorVolumen(BigDecimal volumenM3) {
+        try {
+            return catalogosClient.obtenerCostoBaseKmPorVolumen(volumenM3);
+        } catch (Exception e) {
+            log.warn("No se pudo obtener costo base por volumen desde ms-catalogos. Usando valor por defecto. Error: {}", 
+                e.getMessage());
+            return COSTO_BASE_KM_DEFAULT_FALLBACK;
+        }
     }
 
     public Ruta create(Ruta ruta) {
@@ -87,9 +123,10 @@ public class RutaService {
         // Calcular duración estimada si no viene especificada
         Integer duracionMinPlan = request.duracionMinPlan();
         if (duracionMinPlan == null && request.distanciaKmPlan() != null) {
+            CatalogosClient.ConfiguracionTarifaDTO config = obtenerConfiguracionTarifas();
             // Fórmula: duracion_minutos = (distancia_km / velocidad_km_h) × 60
             duracionMinPlan = request.distanciaKmPlan()
-                    .divide(VELOCIDAD_PROMEDIO_KM_H, 2, RoundingMode.HALF_UP)
+                    .divide(config.velocidadPromedioKmH(), 2, RoundingMode.HALF_UP)
                     .multiply(new BigDecimal("60"))
                     .intValue();
         }
@@ -143,7 +180,7 @@ public class RutaService {
         
         // Calcular costo total estimado basado en la distancia
         BigDecimal costoEstimado = ruta.getDistanciaKmPlan() != null 
-                ? ruta.getDistanciaKmPlan().multiply(COSTO_BASE_KM_DEFAULT)
+                ? ruta.getDistanciaKmPlan().multiply(COSTO_BASE_KM_DEFAULT_FALLBACK)
                 : BigDecimal.ZERO;
         
         return new RutaDetalleResponse(
@@ -197,6 +234,9 @@ public class RutaService {
      */
     @Transactional(readOnly = true)
     public CostoEntregaResponse calcularCostoTotal(UUID rutaId, BigDecimal pesoKg, BigDecimal volumenM3) {
+        // 0. Obtener configuración de tarifas
+        CatalogosClient.ConfiguracionTarifaDTO config = obtenerConfiguracionTarifas();
+        
         // 1. Obtener la ruta con sus tramos
         Ruta ruta = rutaRepository.findByIdWithTramos(rutaId)
                 .orElseThrow(() -> new EntityNotFoundException("Ruta no encontrada con ID: " + rutaId));
@@ -224,7 +264,7 @@ public class RutaService {
             // Costo de combustible = distancia × consumo_combustible × precio_litro
             BigDecimal costoCombustible = distancia
                     .multiply(camionDatos.consumoCombustibleKm())
-                    .multiply(PRECIO_LITRO_COMBUSTIBLE)
+                    .multiply(config.precioLitroCombustible())
                     .setScale(2, RoundingMode.HALF_UP);
             
             BigDecimal costoTotalTramo = costoTraslado.add(costoCombustible);
@@ -265,8 +305,8 @@ public class RutaService {
                 BigDecimal diasEstadia = new BigDecimal(duracion.toMinutes())
                         .divide(new BigDecimal("1440"), 4, RoundingMode.HALF_UP); // 1440 minutos = 1 día
                 
-                // TODO: En sistema real, obtener costo del depósito desde ms-catalogos
-                BigDecimal costoDepositoDiario = COSTO_ESTADIA_DIARIO_DEFAULT;
+                // Obtener costo de estadía de la configuración
+                BigDecimal costoDepositoDiario = config.costoEstadiaDiarioDefault();
                 
                 BigDecimal costoEstadia = diasEstadia
                         .multiply(costoDepositoDiario)
@@ -288,7 +328,7 @@ public class RutaService {
 
         // 4. Calcular cargo de gestión (fijo por cantidad de tramos)
         int cantidadTramos = tramosOrdenados.size();
-        BigDecimal cargoGestionTotal = CARGO_GESTION_POR_TRAMO
+        BigDecimal cargoGestionTotal = config.cargoGestionPorTramo()
                 .multiply(new BigDecimal(cantidadTramos))
                 .setScale(2, RoundingMode.HALF_UP);
 
@@ -311,7 +351,7 @@ public class RutaService {
                 ruta.getDistanciaKmPlan(),
                 pesoKg,     // Dejado por compatibilidad aunque no se usa en cálculo refinado
                 volumenM3,  // Dejado por compatibilidad aunque no se usa en cálculo refinado
-                PRECIO_LITRO_COMBUSTIBLE,
+                config.precioLitroCombustible(),
                 tramosDetalle,
                 estadias,
                 "Cálculo refinado basado en datos reales de camiones asignados. " +
@@ -329,7 +369,7 @@ public class RutaService {
         if (tramo.getAsignacionCamion() == null) {
             return new CamionDatos(
                     "SIN-ASIGNAR",
-                    COSTO_BASE_KM_DEFAULT,
+                    COSTO_BASE_KM_DEFAULT_FALLBACK,
                     CONSUMO_COMBUSTIBLE_DEFAULT
             );
         }
@@ -363,7 +403,7 @@ public class RutaService {
         // Camión desconocido, usar valores por defecto
         return new CamionDatos(
                 camionId.toString().substring(0, 8), // Primeros 8 chars del UUID
-                COSTO_BASE_KM_DEFAULT,
+                COSTO_BASE_KM_DEFAULT_FALLBACK,
                 CONSUMO_COMBUSTIBLE_DEFAULT
         );
     }
@@ -371,6 +411,7 @@ public class RutaService {
     /**
      * Calcula una tarifa aproximada ANTES de crear la ruta.
      * Usa valores promedio de camiones elegibles según las características del contenedor.
+     * IMPLEMENTA: Costo base por km variable según volumen del contenedor.
      * 
      * @param request Datos para estimar: distancia, cantidad de tramos, peso y volumen del contenedor
      * @return Estimación de costo basada en promedios
@@ -379,7 +420,13 @@ public class RutaService {
     public com.contenedores.operaciones.dto.TarifaAproximadaResponse calcularTarifaAproximada(
             com.contenedores.operaciones.dto.TarifaAproximadaRequest request) {
         
-        // 1. Obtener camiones elegibles (simulado - en sistema real consulta ms-catalogos)
+        // 0. Obtener configuración de tarifas
+        CatalogosClient.ConfiguracionTarifaDTO config = obtenerConfiguracionTarifas();
+        
+        // 1. Obtener costo base por km según el volumen del contenedor (REGLA DE NEGOCIO IMPLEMENTADA)
+        BigDecimal costoBaseKmPromedio = obtenerCostoBaseKmPorVolumen(request.contenedorVolumenM3());
+        
+        // 2. Obtener camiones elegibles (simulado - en sistema real consulta ms-catalogos)
         // Filtro: camiones con capacidad suficiente para el contenedor
         List<CamionElegible> camionesElegibles = obtenerCamionesElegibles(
                 request.contenedorPesoKg(), 
@@ -393,25 +440,20 @@ public class RutaService {
             );
         }
         
-        // 2. Calcular valores promedio de los camiones elegibles
-        BigDecimal costoBaseKmPromedio = camionesElegibles.stream()
-                .map(CamionElegible::costoBaseKm)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .divide(new BigDecimal(camionesElegibles.size()), 2, RoundingMode.HALF_UP);
-        
+        // 3. Calcular consumo promedio de los camiones elegibles
         BigDecimal consumoCombustiblePromedio = camionesElegibles.stream()
                 .map(CamionElegible::consumoCombustibleKm)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .divide(new BigDecimal(camionesElegibles.size()), 4, RoundingMode.HALF_UP);
         
-        // 3. Calcular componentes del costo estimado
+        // 4. Calcular componentes del costo estimado
         
         // Cargo de gestión
-        BigDecimal cargoGestionEstimado = CARGO_GESTION_POR_TRAMO
+        BigDecimal cargoGestionEstimado = config.cargoGestionPorTramo()
                 .multiply(new BigDecimal(request.cantidadTramos()))
                 .setScale(2, RoundingMode.HALF_UP);
         
-        // Costo de traslado estimado
+        // Costo de traslado estimado (usa costo base variable por volumen)
         BigDecimal costoTrasladoEstimado = request.distanciaKmEstimada()
                 .multiply(costoBaseKmPromedio)
                 .setScale(2, RoundingMode.HALF_UP);
@@ -419,7 +461,7 @@ public class RutaService {
         // Costo de combustible estimado
         BigDecimal costoCombustibleEstimado = request.distanciaKmEstimada()
                 .multiply(consumoCombustiblePromedio)
-                .multiply(PRECIO_LITRO_COMBUSTIBLE)
+                .multiply(config.precioLitroCombustible())
                 .setScale(2, RoundingMode.HALF_UP);
         
         // Costo total estimado (sin estadías porque no se conocen aún)
@@ -428,7 +470,7 @@ public class RutaService {
                 .add(costoCombustibleEstimado)
                 .setScale(2, RoundingMode.HALF_UP);
         
-        // 4. Construir respuesta
+        // 5. Construir respuesta
         return new com.contenedores.operaciones.dto.TarifaAproximadaResponse(
                 request.solicitudId(),
                 request.distanciaKmEstimada(),
@@ -440,10 +482,11 @@ public class RutaService {
                 costoTrasladoEstimado,
                 costoCombustibleEstimado,
                 costoTotalEstimado,
-                PRECIO_LITRO_COMBUSTIBLE,
-                "Estimación basada en " + camionesElegibles.size() + " camiones elegibles. " +
+                config.precioLitroCombustible(),
+                "Estimación con costo base $" + costoBaseKmPromedio + "/km para volumen " + request.contenedorVolumenM3() + " m³. " +
+                "Basada en " + camionesElegibles.size() + " camiones elegibles. " +
                 "No incluye costos de estadías en depósitos (se calcularán al finalizar). " +
-                "En sistema productivo, los datos de camiones se consultarían de ms-catalogos vía REST."
+                "Tarifas obtenidas dinámicamente de ms-catalogos."
         );
     }
     
