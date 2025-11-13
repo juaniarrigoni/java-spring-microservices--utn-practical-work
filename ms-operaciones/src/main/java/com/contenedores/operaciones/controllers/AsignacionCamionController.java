@@ -1,9 +1,12 @@
 package com.contenedores.operaciones.controllers;
 
+import com.contenedores.operaciones.dto.AsignacionCamionRequest;
+import com.contenedores.operaciones.dto.AsignacionCamionResponse;
 import com.contenedores.operaciones.model.AsignacionCamion;
 import com.contenedores.operaciones.service.AsignacionCamionService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,5 +33,19 @@ public class AsignacionCamionController {
     public ResponseEntity<AsignacionCamion> confirmarAsignacion(@PathVariable UUID asignacionId) {
         AsignacionCamion asignacionConfirmada = asignacionService.confirmarAsignacion(asignacionId);
         return ResponseEntity.ok(asignacionConfirmada);
+    }
+
+    /**
+     * Endpoint para asignar un camión a un tramo de traslado (REQ-6).
+     * Método: POST
+     * Ruta: /asignaciones
+     * Body: { "tramoId": "uuid", "camionId": "uuid" }
+     * Rol: Operador / Administrador
+     */
+    @Operation(summary = "Asignar camión a un tramo de traslado")
+    @PostMapping
+    public ResponseEntity<AsignacionCamionResponse> asignarCamionATramo(@RequestBody AsignacionCamionRequest request) {
+        AsignacionCamionResponse response = asignacionService.asignarCamionATramo(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

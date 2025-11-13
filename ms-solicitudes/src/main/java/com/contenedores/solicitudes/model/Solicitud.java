@@ -76,6 +76,10 @@ public class Solicitud {
     @Column(name = "tiempo_real_entrega")
     private LocalDateTime tiempoRealEntrega;
 
+    @OneToMany(mappedBy = "solicitud", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private java.util.List<HistorialEstado> historialEstados = new java.util.ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         if (id == null) {
@@ -85,7 +89,24 @@ public class Solicitud {
             fechaCreacion = LocalDateTime.now();
         }
         if (estadoActual == null) {
-            estadoActual = EstadoSolicitud.CREADA;
+            estadoActual = EstadoSolicitud.BORRADOR;
         }
+    }
+    
+    /**
+     * Cambia el estado de la solicitud y registra el cambio en el historial.
+     */
+    public void cambiarEstado(EstadoSolicitud nuevoEstado, String observaciones) {
+        EstadoSolicitud estadoAnterior = this.estadoActual;
+        this.estadoActual = nuevoEstado;
+        
+        HistorialEstado registro = HistorialEstado.builder()
+                .solicitud(this)
+                .estadoAnterior(estadoAnterior)
+                .estadoNuevo(nuevoEstado)
+                .observaciones(observaciones)
+                .build();
+        
+        this.historialEstados.add(registro);
     }
 }

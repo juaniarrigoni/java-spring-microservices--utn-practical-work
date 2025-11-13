@@ -1,5 +1,6 @@
 package com.contenedores.operaciones.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +14,7 @@ import java.util.UUID;
 public class AsignacionCamion {
     @Id @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+    @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tramo_id", nullable = false, unique = true)
     private Tramo tramo;
