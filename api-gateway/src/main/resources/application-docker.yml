@@ -1,34 +1,43 @@
+# RUTA: api-gateway/src/main/resources/application-docker.yml
+
 spring:
+  application:
+    name: api-gateway
   cloud:
     gateway:
+      # LA SECCIÓN 'globalcors' HA SIDO ELIMINADA DE AQUÍ
+
       routes:
         - id: ms-catalogos
-          uri: lb://ms-catalogos # Load balancing con el nombre del servicio Docker
+          uri: lb://ms-catalogos
           predicates:
             - Path=/api/catalogos/**
           filters:
-            - StripPrefix=1
+            - StripPrefix=2
+
         - id: ms-solicitudes
           uri: lb://ms-solicitudes
           predicates:
             - Path=/api/solicitudes/**
           filters:
-            - StripPrefix=1
+            - StripPrefix=2
+
         - id: ms-operaciones
           uri: lb://ms-operaciones
           predicates:
             - Path=/api/operaciones/**
           filters:
-            - StripPrefix=1
+            - StripPrefix=2
+
   security:
     oauth2:
       resourceserver:
         jwt:
-          # URL del emisor de Keycloak
-          #issuer-uri: http://keycloak:8084/realms/master
           issuer-uri: http://keycloak:8084/realms/tpi-backend
+
 server:
   port: 8080
+
 management:
   endpoints:
     web:

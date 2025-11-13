@@ -71,7 +71,6 @@
                 <dependency>
                         <groupId>org.springdoc</groupId>
                         <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-                        <!-- CORRECCIÓN: Se eliminó la etiqueta <version>. La versión es gestionada por el POM padre. -->
                 </dependency>
 
                 <!-- Dependencias de Testing -->
@@ -85,9 +84,14 @@
         <build>
                 <plugins>
                         <!--
-                            CORRECCIÓN: Se eliminó el plugin maven-compiler-plugin.
-                            Su configuración se hereda completamente del POM padre para mantener la consistencia.
+                            ESTA ES LA CLAVE: Le decimos a este módulo que USE el plugin
+                            del compilador. Heredará la configuración de Java 17 del padre.
                         -->
+                        <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-compiler-plugin</artifactId>
+                        </plugin>
+                        <!-- También le decimos que use el plugin de Spring Boot -->
                         <plugin>
                                 <groupId>org.springframework.boot</groupId>
                                 <artifactId>spring-boot-maven-plugin</artifactId>
