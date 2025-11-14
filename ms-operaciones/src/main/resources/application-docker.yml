@@ -24,6 +24,8 @@ spring:
 
 server:
   port: 8083
+  forward-headers-strategy: framework
+
 
 management:
   endpoints:
@@ -33,3 +35,6 @@ management:
   metrics:
     tags:
       application: ms-operaciones
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

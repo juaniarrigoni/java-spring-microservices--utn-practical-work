@@ -10,16 +10,27 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "*" # Permitir todos los orígenes para desarrollo. Ajustar en producción.
+            allowedOrigins:
+              - "http://localhost"
+              - "http://localhost:8080"
+              - "http://127.0.0.1"
+              - "http://127.0.0.1:8080"
+              - "http://localhost:4200"
+              - "http://localhost:5173"
+            allowedOriginPatterns: "*"
             allowedMethods:
               - GET
               - POST
               - PUT
               - DELETE
               - OPTIONS
-            allowedHeaders: "*"
+            allowedHeaders:
+            - "*"
             allowCredentials: true
             maxAge: 3600
+gateway:
+  security:
+    enabled: false
 management:
   endpoints:
     web:

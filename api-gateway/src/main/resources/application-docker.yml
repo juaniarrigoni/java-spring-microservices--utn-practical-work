@@ -1,33 +1,32 @@
-# RUTA: api-gateway/src/main/resources/application-docker.yml
-
 spring:
   application:
     name: api-gateway
   cloud:
     gateway:
-      # LA SECCIÓN 'globalcors' HA SIDO ELIMINADA DE AQUÍ
-
       routes:
         - id: ms-catalogos
-          uri: lb://ms-catalogos
+          uri: http://ms-catalogos:8081
           predicates:
             - Path=/api/catalogos/**
           filters:
             - StripPrefix=2
+            - SetRequestHeader=X-Forwarded-Prefix, /api/catalogos
 
         - id: ms-solicitudes
-          uri: lb://ms-solicitudes
+          uri: http://ms-solicitudes:8082
           predicates:
             - Path=/api/solicitudes/**
           filters:
             - StripPrefix=2
+            - SetRequestHeader=X-Forwarded-Prefix, /api/solicitudes
 
         - id: ms-operaciones
-          uri: lb://ms-operaciones
+          uri: http://ms-operaciones:8083
           predicates:
             - Path=/api/operaciones/**
           filters:
             - StripPrefix=2
+            - SetRequestHeader=X-Forwarded-Prefix, /api/operaciones
 
   security:
     oauth2:
@@ -37,6 +36,10 @@ spring:
 
 server:
   port: 8080
+
+gateway:
+  security:
+    enabled: true
 
 management:
   endpoints:
