@@ -33,3 +33,8 @@ management:
   metrics:
     tags:
       application: ms-solicitudes
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    use-root-path: true

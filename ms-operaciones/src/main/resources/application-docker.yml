@@ -33,3 +33,8 @@ management:
   metrics:
     tags:
       application: ms-operaciones
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    use-root-path: true

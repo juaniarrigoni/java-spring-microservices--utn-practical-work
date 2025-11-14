@@ -35,3 +35,8 @@ management:
   metrics:
     tags:
       application: ms-catalogos
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    use-root-path: true
