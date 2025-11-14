@@ -21,6 +21,10 @@ spring:
 ms-catalogos:
   url: http://localhost:8081
 
+# Configuración de OSRM para cálculo de rutas (local)
+osrm:
+  url: http://localhost:5000
+
 springdoc:
   swagger-ui:
     path: /swagger

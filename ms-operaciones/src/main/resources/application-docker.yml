@@ -25,6 +25,10 @@ spring:
 ms-catalogos:
   url: http://ms-catalogos:8081
 
+# Configuración de OSRM para cálculo de rutas
+osrm:
+  url: http://osrm-backend:5000
+
 server:
   port: 8083
 management:

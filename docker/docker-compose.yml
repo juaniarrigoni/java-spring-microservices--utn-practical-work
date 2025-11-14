@@ -27,9 +27,9 @@ services:
     ports:
       - "5000:5000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/route/v1/driving/-64.18,-31.42;-58.38,-34.60?overview=false"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--timeout=5", "-O", "/dev/null", "http://127.0.0.1:5000/route/v1/driving/-64.18,-31.42;-58.38,-34.60?overview=false"]
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
       start_period: 30s
     networks: [tpi]
