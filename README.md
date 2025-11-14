@@ -201,5 +201,88 @@ Si querés investigar rutas internas, mirá `api-gateway/src/main/java/com/conte
 
 Con esto tenés en el README un apartado práctico sobre cómo probar las rutas a través del gateway, ejemplos con `curl.exe` y PowerShell, y opciones para fijar o desactivar la seguridad.
 
+## 8. Configuración de OSRM (Open Source Routing Machine)
+
+OSRM calcula distancias y tiempos de viaje reales por carretera en Argentina, utilizando datos de OpenStreetMap.
+
+### Pre-requisitos
+
+- Descargar el archivo de mapa de Argentina desde Geofabrik:
+  - URL: https://download.geofabrik.de/south-america/argentina-latest.osm.pbf
+  - Tamaño: ~384 MB
+- Crear un directorio local para los datos procesados (ej: `D:/osrm-data/`)
+
+### Procesamiento de datos (solo una vez)
+
+1) **Extraer datos del mapa** (toma ~10 minutos):
+
+```bash
+docker run -t -v D:/osrm-data:/data ghcr.io/project-osrm/osrm-backend osrm-extract -p /opt/car.lua /data/argentina-latest.osm.pbf
+```
+
+2) **Construir índice de jerarquía de contracción** (toma ~15-20 minutos, genera archivo .osrm.hsgr de ~900MB):
+
+```bash
+docker run -t -v D:/osrm-data:/data ghcr.io/project-osrm/osrm-backend osrm-contract /data/argentina-latest.osrm
+```
+
+> **Nota:** Estos comandos se ejecutan **una sola vez**. Los archivos procesados (.osrm, .osrm.hsgr, etc.) se reutilizan cada vez que levantes el stack.
+
+### Configuración en docker-compose
+
+El archivo `docker/.env` debe contener la ruta a tus datos OSRM:
+
+```env
+OSRM_DATA_PATH=D:/osrm-data
+```
+
+> Este archivo está en `.gitignore` para no commitear rutas locales.
+
+### Probar OSRM directamente
+
+Una vez levantado el stack con `docker compose up -d`, podés probar el servicio OSRM:
+
+```bash
+# Ejemplo: Córdoba (-64.18105,-31.4135) a Rosario (-60.6985,-32.9471)
+curl "http://localhost:5000/route/v1/driving/-64.18105,-31.4135;-60.6985,-32.9471?overview=false"
+```
+
+Respuesta esperada:
+```json
+{
+  "code": "Ok",
+  "routes": [{
+    "distance": 398251.2,  // metros
+    "duration": 14931      // segundos
+  }]
+}
+```
+
+### Endpoints de distancia en ms-operaciones
+
+OSRM está integrado en el microservicio `ms-operaciones` con los siguientes endpoints:
+
+- `POST /distancias/calcular` - Distancia general entre dos puntos
+- `POST /distancias/directa` - Distancia directa origen→destino
+- `POST /distancias/origen-deposito` - Distancia origen→depósito
+- `POST /distancias/deposito-destino` - Distancia depósito→destino
+- `POST /distancias/entre-depositos` - Distancia entre dos depósitos
+
+Ejemplo de request:
+```bash
+curl -X POST http://localhost:8083/distancias/directa \
+  -H "Content-Type: application/json" \
+  -d '{
+    "origenNombre": "Córdoba",
+    "origen": {"latitud": -31.4135, "longitud": -64.18105},
+    "destinoNombre": "Rosario",
+    "destino": {"latitud": -32.9471, "longitud": -60.6985}
+  }'
+```
+
+Documentación completa en: `http://localhost:8083/swagger-ui/index.html`
+
+---
+
 **Siguiente paso (si querés):**
 - Puedo commitear y guiarte para pushear estos cambios a GitHub; si preferís que yo genere el texto del PR también lo hago. Indica si querés que te dé los comandos para hacer `git pull --rebase` y `git push --force-with-lease` (para resolver el non-fast-forward) o si preferís crear una rama nueva y abrir un PR.
