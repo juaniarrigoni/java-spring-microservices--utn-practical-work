@@ -10,16 +10,29 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "*" # Permitir todos los orígenes para desarrollo. Ajustar en producción.
+            # Lista explícita para evitar el error "allowCredentials + *".
+            # Agrega aquí los orígenes que necesites habilitar.
+            allowedOrigins:
+              - "http://localhost"
+              - "http://localhost:8080"
+              - "http://127.0.0.1"
+              - "http://127.0.0.1:8080"
+              - "http://localhost:4200"
+              - "http://localhost:5173"
             allowedMethods:
               - GET
               - POST
               - PUT
               - DELETE
               - OPTIONS
-            allowedHeaders: "*"
+            allowedHeaders:
+              - "*"
             allowCredentials: true
             maxAge: 3600
+
+gateway:
+  security:
+    enabled: false # Mantiene el gateway abierto hasta que Keycloak esté disponible
 management:
   endpoints:
     web:
