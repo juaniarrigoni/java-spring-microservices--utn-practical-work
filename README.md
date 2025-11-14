@@ -282,6 +282,78 @@ curl -X POST http://localhost:8083/distancias/directa \
 
 Documentación completa en: `http://localhost:8083/swagger-ui/index.html`
 
+## 9. Setup para nuevos miembros del equipo (OSRM)
+
+Si sos un nuevo integrante del equipo, **NO necesitás ejecutar los comandos de procesamiento de OSRM** (que toman ~30 minutos). En su lugar:
+
+### Opción A: Usar archivos procesados compartidos (recomendado)
+
+1. **Solicitar el ZIP de datos OSRM** al equipo
+   - Archivo: `osrm-data.zip` (~1.3 GB comprimido)
+   - Contiene todos los archivos `argentina-latest.osrm*` ya procesados
+
+2. **Descomprimir en tu máquina local**
+   ```bash
+   # Windows: descomprimir en D:/osrm-data/
+   # Linux/Mac: descomprimir en /home/tu-usuario/osrm-data/
+   ```
+
+3. **Verificar estructura de archivos**
+   ```
+   osrm-data/
+   ├── argentina-latest.osm.pbf
+   ├── argentina-latest.osrm
+   ├── argentina-latest.osrm.hsgr       (~900 MB)
+   ├── argentina-latest.osrm.nodes
+   ├── argentina-latest.osrm.edges
+   ├── argentina-latest.osrm.geometry
+   └── ... (otros archivos .osrm.*)
+   ```
+
+4. **Crear tu archivo `docker/.env`** con tu ruta local:
+   ```env
+   # Windows
+   OSRM_DATA_PATH=D:/osrm-data
+   
+   # Linux/Mac
+   OSRM_DATA_PATH=/home/tu-usuario/osrm-data
+   ```
+   
+   > **Importante:** Este archivo NO se commitea (está en `.gitignore`). Cada miembro tiene su propia ruta.
+
+5. **Continuar con el setup normal:**
+   ```bash
+   git pull origin osrm
+   mvn clean package -DskipTests
+   cd docker
+   docker compose up -d
+   ```
+
+### Opción B: Procesar datos desde cero (alternativa lenta)
+
+Si no tenés acceso al ZIP o preferís procesar los datos localmente:
+
+1. Descargar mapa de Argentina: https://download.geofabrik.de/south-america/argentina-latest.osm.pbf (~384 MB)
+2. Crear carpeta local: `D:/osrm-data/` (Windows) o `/home/usuario/osrm-data/` (Linux/Mac)
+3. Copiar el archivo descargado a esa carpeta
+4. Ejecutar los comandos de procesamiento (ver sección 8)
+5. Crear `docker/.env` con tu ruta
+6. Levantar el stack
+
+### Verificar que OSRM funciona
+
+```bash
+# Probar endpoint directo de OSRM
+curl "http://localhost:5000/route/v1/driving/-64.18105,-31.4135;-60.6985,-32.9471?overview=false"
+
+# Probar endpoint integrado en ms-operaciones
+curl -X POST http://localhost:8083/distancias/directa \
+  -H "Content-Type: application/json" \
+  -d '{"origenNombre":"Córdoba","origen":{"latitud":-31.4135,"longitud":-64.18105},"destinoNombre":"Rosario","destino":{"latitud":-32.9471,"longitud":-60.6985}}'
+```
+
+Deberías ver distancias y tiempos de viaje calculados correctamente.
+
 ---
 
 **Siguiente paso (si querés):**
