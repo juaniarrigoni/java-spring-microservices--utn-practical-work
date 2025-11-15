@@ -1,6 +1,4 @@
 spring:
-  application:
-    name: api-gateway
   cloud:
     gateway:
       routes:
@@ -34,18 +32,7 @@ spring:
         jwt:
           issuer-uri: http://keycloak:8084/realms/tpi-backend
 
-server:
-  port: 8080
-
+# Propiedad para leer en SecurityConfig si quisiéramos desactivar seguridad
 gateway:
   security:
     enabled: true
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health, info, prometheus
-  metrics:
-    tags:
-      application: api-gateway

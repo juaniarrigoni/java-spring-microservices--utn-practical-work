@@ -1,18 +1,16 @@
 server:
   port: 8081
-  # Esta línea es crucial para la solución de Codex
   forward-headers-strategy: framework
 
 spring:
   application:
     name: ms-catalogos
   datasource:
-    url: jdbc:postgresql://localhost:5433/catalogos #
+    url: jdbc:postgresql://localhost:5433/catalogos
     username: postgres
     password: postgres
   jpa:
     hibernate:
-      # 'validate' es bueno para producción o pruebas donde esperas que el esquema ya exista
       ddl-auto: validate
   flyway:
     enabled: true
@@ -22,13 +20,14 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://keycloak:8084/realms/tpi-backend
-
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html
-
+    config-url: /v3/api-docs/swagger-config
 management:
   endpoints:
     web:
       exposure:
         include: "health,info,prometheus"
+  endpoint:
+    health:
+      show-details: always

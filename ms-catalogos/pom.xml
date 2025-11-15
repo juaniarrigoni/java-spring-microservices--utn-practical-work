@@ -10,7 +10,7 @@
 
         <artifactId>ms-catalogos</artifactId>
         <name>ms-catalogos</name>
-        <description>Microservicio de Catalogos</description>
+        <description>Microservicio de Catálogos</description>
 
         <dependencies>
                 <!-- Dependencias Core de Spring -->
@@ -40,11 +40,6 @@
                 <dependency>
                         <groupId>org.flywaydb</groupId>
                         <artifactId>flyway-database-postgresql</artifactId>
-                        <scope>runtime</scope>
-                </dependency>
-                <dependency>
-                        <groupId>com.h2database</groupId>
-                        <artifactId>h2</artifactId>
                         <scope>runtime</scope>
                 </dependency>
 
@@ -83,15 +78,10 @@
 
         <build>
                 <plugins>
-                        <!--
-                            ESTA ES LA CLAVE: Le decimos a este módulo que USE el plugin
-                            del compilador. Heredará la configuración de Java 17 del padre.
-                        -->
                         <plugin>
                                 <groupId>org.apache.maven.plugins</groupId>
                                 <artifactId>maven-compiler-plugin</artifactId>
                         </plugin>
-                        <!-- También le decimos que use el plugin de Spring Boot -->
                         <plugin>
                                 <groupId>org.springframework.boot</groupId>
                                 <artifactId>spring-boot-maven-plugin</artifactId>

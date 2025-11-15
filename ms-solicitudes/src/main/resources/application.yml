@@ -2,7 +2,6 @@ server:
   port: 8082
   forward-headers-strategy: framework
 
-
 spring:
   application:
     name: ms-solicitudes
@@ -13,27 +12,24 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    properties:
-      hibernate.format_sql: true
   flyway:
     enabled: true
     locations: classpath:db/migration
   security:
     oauth2:
-      resource server:
+      resourceserver:
         jwt:
           issuer-uri: http://keycloak:8084/realms/tpi-backend
 
-  endpoint:
-    health:
-      show-details: always
-
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
 
 management:
   endpoints:
     web:
       exposure:
-        include: "health,info"
+        include: "health,info,prometheus"
+  endpoint:
+    health:
+      show-details: always

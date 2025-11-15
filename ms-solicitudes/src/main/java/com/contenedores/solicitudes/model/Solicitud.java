@@ -1,0 +1,112 @@
+package com.contenedores.solicitudes.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(name = "solicitudes")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+public class Solicitud {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+
+    @Column(name = "fecha_creacion", nullable = false)
+    private LocalDateTime fechaCreacion;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado_actual", nullable = false)
+    private EstadoSolicitud estadoActual;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cliente_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private Cliente cliente;
+
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "contenedor_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private Contenedor contenedor;
+
+    @Column(name = "tarifa_id")
+    private UUID tarifaId;
+    
+    @Column(name = "costo_estimado")
+    private BigDecimal costoEstimado;
+    
+    @Column(name = "distancia_km_estimada")
+    private Integer distanciaKmEstimada;
+    
+    @Column(name = "eta_estimado")
+    private LocalDateTime etaEstimado;
+
+    @Column(name = "origen_nombre")
+    private String origenNombre;
+    
+    @Column(name = "origen_lat")
+    private BigDecimal origenLat;
+    
+    @Column(name = "origen_lng")
+    private BigDecimal origenLng;
+    
+    @Column(name = "destino_nombre")
+    private String destinoNombre;
+    
+    @Column(name = "destino_lat")
+    private BigDecimal destinoLat;
+    
+    @Column(name = "destino_lng")
+    private BigDecimal destinoLng;
+
+    @Column(name = "costo_real")
+    private BigDecimal costoReal;
+    
+    @Column(name = "tiempo_real_entrega")
+    private LocalDateTime tiempoRealEntrega;
+
+    @OneToMany(mappedBy = "solicitud", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private java.util.List<HistorialEstado> historialEstados = new java.util.ArrayList<>();
+
+    @PrePersist
+    protected void onCreate() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
+        if (fechaCreacion == null) {
+            fechaCreacion = LocalDateTime.now();
+        }
+        if (estadoActual == null) {
+            estadoActual = EstadoSolicitud.BORRADOR;
+        }
+    }
+    
+    /**
+     * Cambia el estado de la solicitud y registra el cambio en el historial.
+     */
+    public void cambiarEstado(EstadoSolicitud nuevoEstado, String observaciones) {
+        EstadoSolicitud estadoAnterior = this.estadoActual;
+        this.estadoActual = nuevoEstado;
+        
+        HistorialEstado registro = HistorialEstado.builder()
+                .solicitud(this)
+                .estadoAnterior(estadoAnterior)
+                .estadoNuevo(nuevoEstado)
+                .observaciones(observaciones)
+                .build();
+        
+        this.historialEstados.add(registro);
+    }
+}

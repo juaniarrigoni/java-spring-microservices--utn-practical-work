@@ -1,41 +1,27 @@
 server:
   port: 8080
+
 spring:
   application:
     name: api-gateway
   cloud:
     gateway:
-      default-filters:
-        - DedupeResponseHeader=Vary Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers
+      # CONFIGURACIÓN CORS CENTRALIZADA
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins:
-              - "http://localhost"
-              - "http://localhost:8080"
-              - "http://127.0.0.1"
-              - "http://127.0.0.1:8080"
-              - "http://localhost:4200"
-              - "http://localhost:5173"
-            allowedOriginPatterns: "*"
+            allowedOriginPatterns: "*" # Permite cualquier origen de forma segura con credenciales
             allowedMethods:
               - GET
               - POST
               - PUT
               - DELETE
               - OPTIONS
-            allowedHeaders:
-            - "*"
+            allowedHeaders: "*"
             allowCredentials: true
-            maxAge: 3600
-gateway:
-  security:
-    enabled: false
+
 management:
   endpoints:
     web:
       exposure:
         include: health, info, prometheus
-  metrics:
-    tags:
-      application: api-gateway

@@ -49,4 +49,39 @@ public class CamionController {
 
         return ResponseEntity.created(location).body(camionCreado);
     }
+
+    /**
+     * Endpoint para obtener un camión por ID.
+     * Método: GET
+     * Ruta: /camiones/{id}
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Camion> obtenerPorId(@PathVariable("id") java.util.UUID id) {
+        Camion camion = camionService.findById(id);
+        return ResponseEntity.ok(camion);
+    }
+
+    /**
+     * Endpoint para actualizar un camión existente.
+     * Método: PUT
+     * Ruta: /camiones/{id}
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Camion> actualizarCamion(
+            @PathVariable("id") java.util.UUID id,
+            @RequestBody Camion camion) {
+        Camion camionActualizado = camionService.update(id, camion);
+        return ResponseEntity.ok(camionActualizado);
+    }
+
+    /**
+     * Endpoint para eliminar (desactivar) un camión.
+     * Método: DELETE
+     * Ruta: /camiones/{id}
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarCamion(@PathVariable("id") java.util.UUID id) {
+        camionService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }

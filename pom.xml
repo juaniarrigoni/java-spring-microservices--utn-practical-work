@@ -18,6 +18,7 @@
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring-boot.version>3.3.3</spring-boot.version>
+        <!-- Versión de Spring Cloud COMPATIBLE con Spring Boot 3.3.x -->
         <spring-cloud.version>2023.0.2</spring-cloud.version>
         <springdoc.version>2.5.0</springdoc.version>
         <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
@@ -42,17 +43,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
-            <!--
-                AQUÍ ESTÁ LA CLAVE: Gestionamos la versión de SpringDoc para todos los módulos.
-            -->
+            <!-- Gestión centralizada de SpringDoc -->
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc.version}</version>
             </dependency>
-
-            <!-- Lombok -->
+            <!-- Gestión centralizada de Lombok -->
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
@@ -65,7 +62,20 @@
     <build>
         <pluginManagement>
             <plugins>
-                <!-- Configuración central para el compilador de Java 17 -->
+                <!-- Plugin de Spring Boot para crear JARs ejecutables -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.maven.plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>repackage</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- Plugin del compilador, configurado para Java 17 -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
@@ -80,19 +90,6 @@
                             </path>
                         </annotationProcessorPaths>
                     </configuration>
-                </plugin>
-                <!-- Configuración central para el plugin de Spring Boot -->
-                <plugin>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-maven-plugin</artifactId>
-                    <version>${spring-boot.maven.plugin.version}</version>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>repackage</goal>
-                            </goals>
-                        </execution>
-                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>

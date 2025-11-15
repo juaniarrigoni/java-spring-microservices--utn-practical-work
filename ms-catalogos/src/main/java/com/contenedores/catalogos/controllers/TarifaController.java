@@ -48,4 +48,39 @@ public class TarifaController {
 
         return ResponseEntity.created(location).body(tarifaCreada);
     }
+
+    /**
+     * Endpoint para obtener una tarifa por ID.
+     * Método: GET
+     * Ruta: /tarifas/{id}
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Tarifa> obtenerPorId(@PathVariable("id") java.util.UUID id) {
+        Tarifa tarifa = tarifaService.findById(id);
+        return ResponseEntity.ok(tarifa);
+    }
+
+    /**
+     * Endpoint para actualizar una tarifa existente.
+     * Método: PUT
+     * Ruta: /tarifas/{id}
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Tarifa> actualizarTarifa(
+            @PathVariable("id") java.util.UUID id,
+            @RequestBody Tarifa tarifa) {
+        Tarifa tarifaActualizada = tarifaService.update(id, tarifa);
+        return ResponseEntity.ok(tarifaActualizada);
+    }
+
+    /**
+     * Endpoint para eliminar (desactivar) una tarifa.
+     * Método: DELETE
+     * Ruta: /tarifas/{id}
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarTarifa(@PathVariable("id") java.util.UUID id) {
+        tarifaService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }
