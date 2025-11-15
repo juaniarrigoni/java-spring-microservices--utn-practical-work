@@ -20,7 +20,6 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://keycloak:8084/realms/tpi-backend
-
 management:
   endpoints:
     web:
@@ -29,10 +28,6 @@ management:
   endpoint:
     health:
       show-details: always
-
-springdoc:
-  swagger-ui:
-    config-url: /v3/api-docs/swagger-config
 
 # AÑADIDO: Configuración para desarrollo local (fuera de Docker)
 ms-catalogos:
