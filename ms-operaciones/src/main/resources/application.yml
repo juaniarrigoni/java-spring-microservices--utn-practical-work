@@ -19,7 +19,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak:8084/realms/tpi-backend
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://${KEYCLOAK_HOST:localhost}:8084/realms/tpi-backend/protocol/openid-connect/certs}
+
 management:
   endpoints:
     web:
@@ -29,8 +30,14 @@ management:
     health:
       show-details: always
 
-# AÑADIDO: Configuración para desarrollo local (fuera de Docker)
 ms-catalogos:
   url: http://localhost:8081
+
 osrm:
   url: http://localhost:5000
+
+app:
+  security:
+    accepted-issuers:
+      - http://localhost:8084/realms/tpi-backend
+      - http://keycloak:8084/realms/tpi-backend

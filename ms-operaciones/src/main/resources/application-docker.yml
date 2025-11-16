@@ -4,9 +4,20 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://keycloak:8084/realms/tpi-backend/protocol/openid-connect/certs}
 
 # AÑADIDO: Sobreescribimos las URLs para que funcionen dentro de la red de Docker
 ms-catalogos:
   url: http://ms-catalogos:8081
 osrm:
   url: http://osrm-backend:5000
+
+app:
+  security:
+    accepted-issuers:
+      - http://localhost:8084/realms/tpi-backend
+      - http://keycloak:8084/realms/tpi-backend
