@@ -1,5 +1,8 @@
 package com.contenedores.operaciones.controllers;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.contenedores.operaciones.dto.AsignacionCamionRequest;
 import com.contenedores.operaciones.dto.AsignacionCamionResponse;
 import com.contenedores.operaciones.model.AsignacionCamion;
@@ -14,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@SecurityRequirement(name = "Keycloak")
 @RequestMapping("/asignaciones") // Ruta más limpia sin el prefijo /api
 @RequiredArgsConstructor
 public class AsignacionCamionController {

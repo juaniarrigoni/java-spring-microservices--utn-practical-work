@@ -2,6 +2,7 @@ package com.contenedores.catalogos.controllers;
 
 import com.contenedores.catalogos.model.Tarifa;
 import com.contenedores.catalogos.service.TarifaService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -10,6 +11,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
+@SecurityRequirement(name = "Keycloak")
 @RequestMapping("/tarifas")
 public class TarifaController {
 

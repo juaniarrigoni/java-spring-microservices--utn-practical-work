@@ -4,6 +4,7 @@ import com.contenedores.catalogos.dto.ConfiguracionTarifaRequest;
 import com.contenedores.catalogos.dto.ConfiguracionTarifaResponse;
 import com.contenedores.catalogos.model.ConfiguracionTarifa;
 import com.contenedores.catalogos.service.ConfiguracionTarifaService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
+@SecurityRequirement(name = "Keycloak")
 @RequestMapping("/configuracion-tarifas")
 @RequiredArgsConstructor
 public class ConfiguracionTarifaController {

@@ -6,6 +6,7 @@ import com.contenedores.operaciones.dto.RutaRequest;
 import com.contenedores.operaciones.model.Ruta;
 import com.contenedores.operaciones.service.RutaService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@SecurityRequirement(name = "Keycloak")
 @RequestMapping("/rutas")
 public class RutaController {
     private final RutaService rutaService;
@@ -114,4 +116,5 @@ public class RutaController {
                 rutaService.calcularTarifaAproximada(request);
         return ResponseEntity.ok(tarifa);
     }
+
 }

@@ -34,7 +34,7 @@ services:
       - "8084:8084"
     volumes:
       - keycloak_data:/opt/keycloak/data
-      - ./keycloak-config:/opt/keycloak/data/import
+#      - ./keycloak-config:/opt/keycloak/data/import
     networks: [tpi]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://keycloak:8084/health/ready"]

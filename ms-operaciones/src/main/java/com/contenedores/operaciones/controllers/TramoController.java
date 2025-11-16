@@ -3,11 +3,13 @@ package com.contenedores.operaciones.controllers;
 import com.contenedores.operaciones.dto.TramoEstadoResponse;
 import com.contenedores.operaciones.service.TramoService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
+@SecurityRequirement(name = "Keycloak")
 @RequestMapping("/tramos")
 public class TramoController {
     private final TramoService tramoService;

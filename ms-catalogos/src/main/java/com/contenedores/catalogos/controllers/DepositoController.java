@@ -1,5 +1,6 @@
 package com.contenedores.catalogos.controllers;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.contenedores.catalogos.model.Deposito;
 import com.contenedores.catalogos.service.DepositoService;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
+@SecurityRequirement(name = "Keycloak")
 @RequestMapping("/depositos")
 public class DepositoController {
 

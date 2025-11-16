@@ -1,5 +1,6 @@
 package com.contenedores.operaciones.controllers;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement; // agregado
 import java.time.Instant;
 
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +13,7 @@ import com.contenedores.operaciones.dto.PlanificacionRequest;
 import com.contenedores.operaciones.dto.PlanificacionResponse;
 
 @RestController
+@SecurityRequirement(name = "Keycloak")
 public class OperacionesController {
 
     @PostMapping("/planificar")

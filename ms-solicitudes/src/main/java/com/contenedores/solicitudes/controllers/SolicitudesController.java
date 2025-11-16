@@ -1,5 +1,6 @@
 package com.contenedores.solicitudes.controllers;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.contenedores.solicitudes.dto.ContenedorPendienteResponse;
 import com.contenedores.solicitudes.model.EstadoSolicitud;
 import com.contenedores.solicitudes.model.Solicitud;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@SecurityRequirement(name = "Keycloak")
 @RequestMapping("/api/solicitudes")
 public class SolicitudesController {
 

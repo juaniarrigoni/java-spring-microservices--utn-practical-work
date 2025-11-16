@@ -1,5 +1,6 @@
 package com.contenedores.catalogos.controllers;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.contenedores.catalogos.dto.TarifaPorVolumenRequest;
 import com.contenedores.catalogos.dto.TarifaPorVolumenResponse;
 import com.contenedores.catalogos.model.TarifaPorVolumen;
@@ -16,6 +17,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
+@SecurityRequirement(name = "Keycloak")
 @RequestMapping("/tarifas-volumen")
 @RequiredArgsConstructor
 public class TarifaPorVolumenController {

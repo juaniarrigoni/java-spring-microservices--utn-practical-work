@@ -4,6 +4,7 @@ import com.contenedores.operaciones.dto.osrm.DistanciaRequest;
 import com.contenedores.operaciones.dto.osrm.DistanciaResponse;
 import com.contenedores.operaciones.service.DistanciaService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
  * Controlador para calcular distancias entre puntos usando OSRM
  */
 @RestController
+@SecurityRequirement(name = "Keycloak")
 @RequestMapping("/distancias")
 @RequiredArgsConstructor
 @Tag(name = "Distancias", description = "Cálculo de distancias entre puntos usando OSRM")
@@ -107,4 +109,5 @@ public class DistanciaController {
                 ResponseEntity.ok(response) : 
                 ResponseEntity.badRequest().body(response);
     }
+
 }
