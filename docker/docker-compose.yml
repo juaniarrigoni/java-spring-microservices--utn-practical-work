@@ -70,7 +70,7 @@ services:
       - "8081:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_FLYWAY_ENABLED=false
+      - SPRING_FLYWAY_ENABLED=true
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 10s
@@ -90,7 +90,7 @@ services:
       - "8082:8082"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_FLYWAY_ENABLED=false
+      - SPRING_FLYWAY_ENABLED=true
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
       interval: 10s
@@ -110,7 +110,7 @@ services:
       - "8083:8083"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_FLYWAY_ENABLED=false
+      - SPRING_FLYWAY_ENABLED=true
       # AÑADIDO: La variable de entorno para que sepa dónde está OSRM
       - OSRM_URL=http://osrm-backend:5000
     healthcheck:

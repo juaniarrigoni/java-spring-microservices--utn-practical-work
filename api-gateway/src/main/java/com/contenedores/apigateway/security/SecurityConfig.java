@@ -9,15 +9,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
-import org.springframework.security.oauth2.jwt.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -35,13 +35,11 @@ public class SecurityConfig {
         http.csrf(ServerHttpSecurity.CsrfSpec::disable);
 
         if (!securityProperties.isEnabled()) {
-            http.authorizeExchange(exchange -> exchange.anyExchange().permitAll())
-                    .oauth2ResourceServer(ServerHttpSecurity.OAuth2ResourceServerSpec::disable);
+            http.authorizeExchange(exchange -> exchange.anyExchange().permitAll());
             return http.build();
         }
 
         http.authorizeExchange(exchange -> exchange
-                        // Rutas públicas para Swagger y health checks
                         .pathMatchers(
                                 "/actuator/**",
                                 "/api/*/swagger-ui.html",
@@ -49,11 +47,40 @@ public class SecurityConfig {
                                 "/api/*/swagger-ui/**",
                                 "/api/*/v3/api-docs/**"
                         ).permitAll()
-                        // El resto requiere autenticación
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
         return http.build();
+    }
+
+    @Bean
+    public ReactiveJwtDecoder jwtDecoder(
+            @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}") String jwkSetUri) {
+        NimbusReactiveJwtDecoder decoder = NimbusReactiveJwtDecoder.withJwkSetUri(jwkSetUri).build();
+
+        OAuth2TokenValidator<Jwt> timestampValidator = new JwtTimestampValidator();
+        OAuth2TokenValidator<Jwt> issuerValidator = token -> {
+            List<String> allowedIssuers = securityProperties.getAcceptedIssuers();
+            if (allowedIssuers == null || allowedIssuers.isEmpty()) {
+                return OAuth2TokenValidatorResult.success();
+            }
+
+            String issuer = token.getIssuer() != null ? token.getIssuer().toString() : "";
+            if (allowedIssuers.contains(issuer)) {
+                return OAuth2TokenValidatorResult.success();
+            }
+
+            return OAuth2TokenValidatorResult.failure(
+                    new OAuth2Error(
+                            "invalid_token",
+                            "Issuer %s no está permitido".formatted(issuer),
+                            null
+                    )
+            );
+        };
+
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(timestampValidator, issuerValidator));
+        return decoder;
     }
 }
