@@ -12,7 +12,6 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
-import org.springframework.security.oauth2.jwt.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
@@ -35,8 +34,7 @@ public class SecurityConfig {
         http.csrf(ServerHttpSecurity.CsrfSpec::disable);
 
         if (!securityProperties.isEnabled()) {
-            http.authorizeExchange(exchange -> exchange.anyExchange().permitAll())
-                    .oauth2ResourceServer(ServerHttpSecurity.OAuth2ResourceServerSpec::disable);
+            http.authorizeExchange(exchange -> exchange.anyExchange().permitAll());
             return http.build();
         }
 
@@ -62,6 +60,11 @@ public class SecurityConfig {
 
         OAuth2TokenValidator<Jwt> defaultValidators = JwtValidators.createDefaultWithoutIssuer();
         OAuth2TokenValidator<Jwt> issuerValidator = token -> {
+            OAuth2TokenValidatorResult baseResult = defaultValidators.validate(token);
+            if (baseResult.hasErrors()) {
+                return baseResult;
+            }
+
             List<String> allowedIssuers = securityProperties.getAcceptedIssuers();
             if (allowedIssuers == null || allowedIssuers.isEmpty()) {
                 return OAuth2TokenValidatorResult.success();
@@ -81,7 +84,7 @@ public class SecurityConfig {
             );
         };
 
-        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(defaultValidators, issuerValidator));
+        decoder.setJwtValidator(issuerValidator);
         return decoder;
     }
 }
