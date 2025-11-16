@@ -177,6 +177,8 @@ El archivo `docker/keycloak-config/tpi-realm-export.json` define:
      -H "Authorization: Bearer <access_token>"
    ```
 
+   > ⚠️ Si Keycloak emite el token con `iss = http://localhost:8084/...` (lo habitual cuando pedís el token desde tu host), el gateway igualmente lo aceptará porque valida directamente contra el JWK Set (`/protocol/openid-connect/certs`). Esto evita los 401 *invalid issuer* aun cuando, desde la red Docker, Keycloak se resuelva como `http://keycloak:8084`.
+
 4. **Opcional**: si querés desactivar la seguridad temporalmente para pruebas rápidas, podés añadir `spring.security.enabled=false` en `api-gateway/src/main/resources/application-docker.yml` y reconstruir.
 
 ## 11. OSRM (Open Source Routing Machine)
