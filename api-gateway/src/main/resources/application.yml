@@ -41,9 +41,20 @@ spring:
             - Path=/api/operaciones/**
           filters:
             - StripPrefix=2
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8084/realms/tpi-backend/protocol/openid-connect/certs}
 
 management:
   endpoints:
     web:
       exposure:
         include: health, info, prometheus
+
+gateway:
+  security:
+    enabled: true
+    accepted-issuers:
+      - http://localhost:8084/realms/tpi-backend

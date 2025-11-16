@@ -77,6 +77,7 @@ El comando crea los Spring Boot fat JAR en `*/target/*.jar` que luego copian los
 
 3. **Contraseñas del gateway**
    - Al usar Keycloak como Resource Server, necesitás tokens JWT. Opcionalmente, podés agregar `SPRING_SECURITY_USER_*` en el compose si querés volver a HTTP Basic para pruebas rápidas.
+   - Si cambiás la URL pública de Keycloak, actualizá `KEYCLOAK_JWK_SET_URI` (para que el gateway pueda descargar las llaves) y, si el `iss` del token también varía, añadilo a `gateway.security.accepted-issuers` o exportá `GATEWAY_SECURITY_ACCEPTED_ISSUERS="http://nuevo-host/..."` antes de levantar el container.
 
 ## 6. Servicios definidos en docker-compose
 
@@ -120,7 +121,11 @@ El script `docker/init.sql` crea tres bases (una por micro). No se crean tablas 
   - `/api/operaciones/**` → `ms-operaciones:8083`
   - Cada ruta aplica `StripPrefix=2`, por lo que `/api/catalogos/health` se reescribe como `/health` en el servicio destino.
 - **CORS global**: se aceptan todos los orígenes y métodos (útil para frontends locales).
-- **Seguridad** (`SecurityConfig.java`): se deshabilita CSRF, se dejan públicas las rutas `/actuator/**` y los Swagger UI de cada MS, y todo lo demás requiere un JWT válido emitido por Keycloak.
+- **Seguridad** (`SecurityConfig.java`):
+  - Si `gateway.security.enabled=true` (valor por defecto) todo el tráfico fuera de health/Swagger exige un JWT válido.
+  - El decoder se alimenta del `jwk-set-uri` (`KEYCLOAK_JWK_SET_URI`, overrideable por variable de entorno) y valida la firma contra Keycloak aunque el token se haya emitido usando otra URL pública.
+  - La lista `gateway.security.accepted-issuers` permite aceptar múltiples valores de `iss` (ej.: `http://localhost:8084/...` y `http://keycloak:8084/...`), evitando 401 `invalid_token` cuando Swagger obtiene el token desde tu host pero el gateway vive en la red Docker.
+  - Podés desactivar temporalmente la seguridad con `gateway.security.enabled=false` (no olvides revertirlo antes de commitear).
 
 ## 10. Keycloak: realm, importación y obtención de tokens
 
@@ -177,7 +182,7 @@ El archivo `docker/keycloak-config/tpi-realm-export.json` define:
      -H "Authorization: Bearer <access_token>"
    ```
 
-   > ⚠️ Si Keycloak emite el token con `iss = http://localhost:8084/...` (lo habitual cuando pedís el token desde tu host), el gateway igualmente lo aceptará porque valida directamente contra el JWK Set (`/protocol/openid-connect/certs`). Esto evita los 401 *invalid issuer* aun cuando, desde la red Docker, Keycloak se resuelva como `http://keycloak:8084`.
+   > ⚠️ Swagger suele conseguir tokens con `iss = http://localhost:8084/...` mientras que, dentro de Docker, Keycloak responde como `http://keycloak:8084`. Gracias a `gateway.security.accepted-issuers` ambos valores están permitidos, por lo que el gateway dejará de devolver 401 `invalid_token`. Si necesitás agregar otra URL (por ejemplo, un hostname público), sumala a la lista en `application-docker.yml` o vía variable `GATEWAY_SECURITY_ACCEPTED_ISSUERS`.
 
 4. **Opcional**: si querés desactivar la seguridad temporalmente para pruebas rápidas, podés añadir `spring.security.enabled=false` en `api-gateway/src/main/resources/application-docker.yml` y reconstruir.
 

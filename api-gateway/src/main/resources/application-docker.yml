@@ -26,10 +26,12 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          # Usamos directamente el JWK Set para evitar problemas de hostname/issuer
-          jwk-set-uri: http://keycloak:8084/realms/tpi-backend/protocol/openid-connect/certs
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://keycloak:8084/realms/tpi-backend/protocol/openid-connect/certs}
 
 # Propiedad para leer en SecurityConfig si quisiéramos desactivar seguridad
 gateway:
   security:
     enabled: true
+    accepted-issuers:
+      - http://localhost:8084/realms/tpi-backend
+      - http://keycloak:8084/realms/tpi-backend
