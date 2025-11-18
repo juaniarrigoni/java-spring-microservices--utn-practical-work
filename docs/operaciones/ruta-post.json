@@ -1,0 +1,29 @@
+{
+  "solicitudId": "<solicitud-uuid>",
+  "distanciaKmPlan": 120.5,
+  "duracionMinPlan": 180,
+  "tramos": [
+    {
+      "orden": 1,
+      "origenNombre": "Puerto A",
+      "origenLat": -34.6,
+      "origenLng": -58.4,
+      "destinoNombre": "Deposito B",
+      "destinoLat": -34.7,
+      "destinoLng": -58.3,
+      "distanciaKmPlan": 60,
+      "duracionMinPlan": 90
+    },
+    {
+      "orden": 2,
+      "origenNombre": "Deposito B",
+      "origenLat": -34.7,
+      "origenLng": -58.3,
+      "destinoNombre": "Destino Final",
+      "destinoLat": -32.944242,
+      "destinoLng": -60.650539,
+      "distanciaKmPlan": 60.5,
+      "duracionMinPlan": 90
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "patente": "ABC123",
+  "capacidadKg": 12000,
+  "volumenM3": 40,
+  "tipo": "TANDEM",
+  "consumoCombustibleKm": 0.5,
+  "costoBaseKm": 10.0,
+  "nombreTransportista": "Juan Perez",
+  "telefonoTransportista": "+54-9-11-1234-5678"
+}

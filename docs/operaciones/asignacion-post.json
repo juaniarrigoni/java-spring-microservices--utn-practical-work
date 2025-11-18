@@ -1,0 +1,6 @@
+{
+  "tramoId": "<tramo-uuid>",
+  "camionId": "<camion-uuid>",
+  "contenedorPesoKg": 1000.0,
+  "contenedorVolumenM3": 2.5
+}

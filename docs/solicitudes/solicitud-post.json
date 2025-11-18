@@ -1,0 +1,20 @@
+{
+  "cliente": {
+    "razonSocial": "ACME SA",
+    "cuit": "20-12345678-9",
+    "email": "cliente@example.com",
+    "telefono": "+54-11-9999-9999"
+  },
+  "contenedor": {
+    "codigo": "CONT1234567",
+    "pesoKg": 1000.0,
+    "volumenM3": 2.5,
+    "tipo": "STANDARD"
+  },
+  "origenNombre": "CABA - Puerto",
+  "origenLat": -34.603722,
+  "origenLng": -58.381592,
+  "destinoNombre": "Rosario - Deposito",
+  "destinoLat": -32.944242,
+  "destinoLng": -60.650539
+}

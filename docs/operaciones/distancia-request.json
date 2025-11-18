@@ -1,0 +1,6 @@
+{
+  "origenNombre": "Origen A",
+  "origen": { "latitud": -34.6, "longitud": -58.4 },
+  "destinoNombre": "Destino B",
+  "destino": { "latitud": -32.9, "longitud": -60.6 }
+}

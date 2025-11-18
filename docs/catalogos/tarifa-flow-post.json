@@ -1,0 +1,9 @@
+{
+  "nombre": "Tarifa Estándar 2025",
+  "precioBase": 1000.00,
+  "precioKm": 120.00,
+  "precioKg": 0.50,
+  "precioM3": 10.00,
+  "vigenciaDesde": "2025-01-01",
+  "vigenciaHasta": "2025-12-31"
+}

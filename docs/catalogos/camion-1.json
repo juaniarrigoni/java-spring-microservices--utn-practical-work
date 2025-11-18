@@ -1,0 +1,10 @@
+{
+  "patente": "AB123CD",
+  "tipo": "Camión de carga pesada",
+  "capacidadKg": 25000,
+  "volumenM3": 80,
+  "consumoCombustibleKm": 0.35,
+  "costoBaseKm": 150.00,
+  "nombreTransportista": "Juan Pérez",
+  "telefonoTransportista": "+54 351 123 4567"
+}

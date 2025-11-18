@@ -1,0 +1,11 @@
+{
+  "nombre": "Volumen Medio",
+  "descripcion": "Entre 15 y 30 m3",
+  "volumenMinM3": 15.00,
+  "volumenMaxM3": 30.00,
+  "costoBaseKm": 9.50,
+  "activa": true,
+  "ordenPrioridad": 2,
+  "vigenciaDesde": "2025-01-01T00:00:00",
+  "vigenciaHasta": "2025-12-31T23:59:59"
+}

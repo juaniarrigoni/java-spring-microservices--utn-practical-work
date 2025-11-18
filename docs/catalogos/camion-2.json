@@ -1,0 +1,10 @@
+{
+  "patente": "EF456GH",
+  "tipo": "Camión de gran volumen",
+  "capacidadKg": 30000,
+  "volumenM3": 100,
+  "consumoCombustibleKm": 0.40,
+  "costoBaseKm": 180.00,
+  "nombreTransportista": "María González",
+  "telefonoTransportista": "+54 351 987 6543"
+}

@@ -1,0 +1,8 @@
+{
+  "tramo": { "id": "<tramo-uuid>" },
+  "timestamp": "2025-11-17T10:00:00",
+  "evento": "INICIO",
+  "latitud": -34.603722,
+  "longitud": -58.381592,
+  "notas": "Salida desde depósito"
+}
