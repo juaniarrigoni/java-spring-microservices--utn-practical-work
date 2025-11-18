@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -76,10 +78,11 @@ public class TarifaPorVolumenService {
     @Transactional
     public TarifaPorVolumen crear(TarifaPorVolumen tarifa) {
         log.info("Creando nueva tarifa por volumen: {}", tarifa.getNombre());
-        
+
         validarRango(tarifa);
+        validarDuplicadoActivo(tarifa, null);
         verificarSolapamiento(tarifa);
-        
+
         return repository.save(tarifa);
     }
 
@@ -92,9 +95,10 @@ public class TarifaPorVolumenService {
             .orElseThrow(() -> new EntityNotFoundException("Tarifa no encontrada con id: " + id));
         
         log.info("Actualizando tarifa por volumen: {}", id);
-        
+
         validarRango(tarifaActualizada);
-        
+        validarDuplicadoActivo(tarifaActualizada, id);
+
         existente.setNombre(tarifaActualizada.getNombre());
         existente.setDescripcion(tarifaActualizada.getDescripcion());
         existente.setVolumenMinM3(tarifaActualizada.getVolumenMinM3());
@@ -175,16 +179,34 @@ public class TarifaPorVolumenService {
      * Verifica que no haya solapamiento con otras tarifas activas
      */
     private void verificarSolapamiento(TarifaPorVolumen tarifa) {
-        BigDecimal max = tarifa.getVolumenMaxM3() != null 
-            ? tarifa.getVolumenMaxM3() 
+        BigDecimal max = tarifa.getVolumenMaxM3() != null
+            ? tarifa.getVolumenMaxM3()
             : new BigDecimal("999999.99");
         
         List<TarifaPorVolumen> solapadas = repository.findSolapamientoRango(
             tarifa.getVolumenMinM3(), max);
         
         if (!solapadas.isEmpty()) {
-            log.warn("Advertencia: La nueva tarifa se solapa con {} tarifas existentes", 
+            log.warn("Advertencia: La nueva tarifa se solapa con {} tarifas existentes",
                 solapadas.size());
+        }
+    }
+
+    /**
+     * Valida que no exista ya una tarifa activa con el mismo rango exacto
+     */
+    private void validarDuplicadoActivo(TarifaPorVolumen tarifa, UUID excluirId) {
+        boolean existeDuplicado = repository.existeTarifaActivaMismoRango(
+            tarifa.getVolumenMinM3(),
+            tarifa.getVolumenMaxM3(),
+            excluirId
+        );
+
+        if (existeDuplicado) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Ya existe una tarifa activa para el rango especificado"
+            );
         }
     }
 }

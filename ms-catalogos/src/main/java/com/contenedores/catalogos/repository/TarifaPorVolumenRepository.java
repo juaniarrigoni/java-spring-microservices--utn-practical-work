@@ -53,4 +53,17 @@ public interface TarifaPorVolumenRepository extends JpaRepository<TarifaPorVolum
         @Param("min") BigDecimal volumenMin,
         @Param("max") BigDecimal volumenMax
     );
+
+    /**
+     * Verifica si ya existe una tarifa activa con el mismo rango exacto
+     */
+    @Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END FROM TarifaPorVolumen t " +
+           "WHERE t.activa = true AND t.volumenMinM3 = :min " +
+           "AND ((t.volumenMaxM3 IS NULL AND :max IS NULL) OR t.volumenMaxM3 = :max) " +
+           "AND (:excluirId IS NULL OR t.id <> :excluirId)")
+    boolean existeTarifaActivaMismoRango(
+        @Param("min") BigDecimal volumenMin,
+        @Param("max") BigDecimal volumenMax,
+        @Param("excluirId") UUID excluirId
+    );
 }
