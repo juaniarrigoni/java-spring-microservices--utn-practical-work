@@ -44,14 +44,15 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
+                        // Transportista: tramos y seguimiento (debe ir ANTES de las reglas del operador)
+                        .requestMatchers(HttpMethod.PUT, "/tramos/*/iniciar", "/tramos/*/finalizar").hasRole("TRANSPORTISTA")
+                        .requestMatchers(HttpMethod.GET, "/tramos/**").hasRole("TRANSPORTISTA")
+                        .requestMatchers(HttpMethod.POST, "/tramos/seguimiento").hasRole("TRANSPORTISTA")
+
                         // Operador: gestiona rutas, distancias y planificaciones
                         .requestMatchers(HttpMethod.GET, "/rutas/**", "/distancias/**", "/operaciones/**", "/asignaciones/**").hasRole("OPERADOR")
                         .requestMatchers(HttpMethod.POST, "/rutas/**", "/distancias/**", "/operaciones/**", "/asignaciones/**").hasRole("OPERADOR")
                         .requestMatchers(HttpMethod.PUT, "/rutas/**", "/distancias/**", "/operaciones/**", "/asignaciones/**").hasRole("OPERADOR")
-
-                        // Transportista: tramos y seguimiento
-                        .requestMatchers(HttpMethod.PUT, "/tramos/*/iniciar", "/tramos/*/finalizar").hasRole("TRANSPORTISTA")
-                        .requestMatchers(HttpMethod.POST, "/tramos/seguimiento").hasRole("TRANSPORTISTA")
 
                         // Cliente bloqueado en rutas protegidas
                         .anyRequest().authenticated()
@@ -102,6 +103,10 @@ public class SecurityConfig {
 
             JwtGrantedAuthoritiesConverter scopes = new JwtGrantedAuthoritiesConverter();
             authorities.addAll(scopes.convert(jwt));
+
+            // Log para debug (remover en producción)
+            System.out.println("🔐 Token subject: " + jwt.getSubject());
+            System.out.println("🔐 Authorities: " + authorities);
 
             return authorities;
         });

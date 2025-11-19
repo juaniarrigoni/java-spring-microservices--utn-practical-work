@@ -1,5 +1,7 @@
 package com.contenedores.solicitudes.controllers;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.contenedores.solicitudes.dto.ContenedorPendienteResponse;
 import com.contenedores.solicitudes.model.EstadoSolicitud;
@@ -53,7 +55,11 @@ public class SolicitudesController {
      * Rol: Cliente / Operador
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Solicitud> obtenerSolicitud(@PathVariable UUID id) {
+    public ResponseEntity<Solicitud> obtenerSolicitud(
+            @Parameter(description = "UUID de la solicitud", required = true, 
+                      schema = @Schema(type = "string", format = "uuid", 
+                                      example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"))
+            @PathVariable("id") UUID id) {
         Solicitud solicitud = solicitudService.findById(id);
         return ResponseEntity.ok(solicitud);
     }
@@ -77,7 +83,10 @@ public class SolicitudesController {
      * Rol: Cliente
      */
     @GetMapping("/contenedor/{codigo}")
-    public ResponseEntity<Solicitud> obtenerSolicitudPorContenedor(@PathVariable String codigo) {
+    public ResponseEntity<Solicitud> obtenerSolicitudPorContenedor(
+            @Parameter(description = "Código del contenedor", required = true,
+                      schema = @Schema(type = "string", example = "CONT-001"))
+            @PathVariable("codigo") String codigo) {
         Solicitud solicitud = solicitudService.findByCodigoContenedor(codigo);
         return ResponseEntity.ok(solicitud);
     }
@@ -126,6 +135,9 @@ public class SolicitudesController {
      */
     @PutMapping("/{id}/finalizar")
     public ResponseEntity<Solicitud> registrarFinalizacion(
+            @Parameter(description = "UUID de la solicitud", required = true,
+                      schema = @Schema(type = "string", format = "uuid",
+                                      example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"))
             @PathVariable("id") UUID solicitudId,
             @RequestParam(name = "costoReal") java.math.BigDecimal costoReal,
             @RequestParam(name = "tiempoRealEntrega") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime tiempoRealEntrega
@@ -145,8 +157,30 @@ public class SolicitudesController {
      * Rol: Cliente / Operador
      */
     @GetMapping("/{id}/historial")
-    public ResponseEntity<List<com.contenedores.solicitudes.dto.HistorialEstadoResponse>> obtenerHistorialEstados(@PathVariable UUID id) {
+    public ResponseEntity<List<com.contenedores.solicitudes.dto.HistorialEstadoResponse>> obtenerHistorialEstados(
+            @Parameter(description = "UUID de la solicitud", required = true,
+                      schema = @Schema(type = "string", format = "uuid",
+                                      example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"))
+            @PathVariable("id") UUID id) {
         List<com.contenedores.solicitudes.dto.HistorialEstadoResponse> historial = solicitudService.obtenerHistorialEstados(id);
         return ResponseEntity.ok(historial);
+    }
+    
+    /**
+     * Cambiar el estado de una solicitud manualmente.
+     * Método: PUT
+     * Ruta: /api/solicitudes/{id}/estado
+     * Rol: Operador
+     */
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<Solicitud> cambiarEstado(
+            @Parameter(description = "UUID de la solicitud", required = true,
+                      schema = @Schema(type = "string", format = "uuid",
+                                      example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"))
+            @PathVariable("id") UUID id,
+            @RequestParam(name = "nuevoEstado") EstadoSolicitud nuevoEstado,
+            @RequestParam(name = "observaciones", required = false, defaultValue = "") String observaciones) {
+        Solicitud solicitudActualizada = solicitudService.cambiarEstado(id, nuevoEstado, observaciones);
+        return ResponseEntity.ok(solicitudActualizada);
     }
 }

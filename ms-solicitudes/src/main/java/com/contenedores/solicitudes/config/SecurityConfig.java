@@ -45,14 +45,15 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // Cliente: crea y consulta sus solicitudes
-                        .requestMatchers(HttpMethod.POST, "/solicitudes/**").hasRole("CLIENTE")
-                        .requestMatchers(HttpMethod.GET, "/solicitudes/mias/**").hasRole("CLIENTE")
-                        .requestMatchers(HttpMethod.GET, "/solicitudes/historial/**").hasRole("CLIENTE")
+                        .requestMatchers(HttpMethod.POST, "/api/solicitudes/**").hasRole("CLIENTE")
+                        .requestMatchers(HttpMethod.GET, "/api/solicitudes/mias/**").hasRole("CLIENTE")
+                        .requestMatchers(HttpMethod.GET, "/api/solicitudes/historial/**").hasRole("CLIENTE")
 
                         // Operador: pendientes, contenedores pendientes, finalizar
-                        .requestMatchers(HttpMethod.GET, "/solicitudes/pendientes/**").hasRole("OPERADOR")
-                        .requestMatchers(HttpMethod.GET, "/solicitudes/contenedores-pendientes/**").hasRole("OPERADOR")
-                        .requestMatchers(HttpMethod.PUT, "/solicitudes/**").hasRole("OPERADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/solicitudes/pendientes").hasRole("OPERADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/solicitudes/contenedores-pendientes").hasRole("OPERADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/solicitudes/{id}/finalizar").hasRole("OPERADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/solicitudes/{id}/estado").hasRole("OPERADOR")
 
                         // Bloqueo por defecto para otros roles
                         .anyRequest().authenticated()

@@ -50,7 +50,7 @@ public class ConfiguracionTarifaController {
      * Obtiene una configuración por ID
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ConfiguracionTarifaResponse> obtenerPorId(@PathVariable UUID id) {
+    public ResponseEntity<ConfiguracionTarifaResponse> obtenerPorId(@PathVariable("id") UUID id) {
         ConfiguracionTarifa config = service.obtenerPorId(id);
         return ResponseEntity.ok(toResponse(config));
     }
@@ -73,7 +73,7 @@ public class ConfiguracionTarifaController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<ConfiguracionTarifaResponse> actualizar(
-            @PathVariable UUID id,
+            @PathVariable("id") UUID id,
             @Valid @RequestBody ConfiguracionTarifaRequest request) {
         ConfiguracionTarifa config = toEntity(request);
         ConfiguracionTarifa actualizada = service.actualizar(id, config);
@@ -85,7 +85,7 @@ public class ConfiguracionTarifaController {
      * Activa una configuración específica
      */
     @PostMapping("/{id}/activar")
-    public ResponseEntity<ConfiguracionTarifaResponse> activar(@PathVariable UUID id) {
+    public ResponseEntity<ConfiguracionTarifaResponse> activar(@PathVariable("id") UUID id) {
         ConfiguracionTarifa activada = service.activar(id);
         return ResponseEntity.ok(toResponse(activada));
     }
@@ -95,7 +95,7 @@ public class ConfiguracionTarifaController {
      * Elimina una configuración (solo si no está activa)
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
+    public ResponseEntity<Void> eliminar(@PathVariable("id") UUID id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
     }

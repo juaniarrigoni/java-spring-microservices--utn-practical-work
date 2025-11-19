@@ -283,4 +283,19 @@ public class SolicitudService {
                 ))
                 .collect(Collectors.toList());
     }
+    
+    /**
+     * Cambia el estado de una solicitud y registra el cambio en el historial.
+     * 
+     * @param solicitudId UUID de la solicitud
+     * @param nuevoEstado El nuevo estado
+     * @param observaciones Observaciones sobre el cambio de estado
+     * @return La solicitud actualizada
+     */
+    @Transactional
+    public Solicitud cambiarEstado(UUID solicitudId, EstadoSolicitud nuevoEstado, String observaciones) {
+        Solicitud solicitud = findById(solicitudId);
+        solicitud.cambiarEstado(nuevoEstado, observaciones);
+        return solicitudRepository.save(solicitud);
+    }
 }

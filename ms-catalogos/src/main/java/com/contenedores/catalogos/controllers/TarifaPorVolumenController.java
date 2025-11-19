@@ -75,7 +75,7 @@ public class TarifaPorVolumenController {
      * Obtiene una tarifa por ID
      */
     @GetMapping("/{id}")
-    public ResponseEntity<TarifaPorVolumenResponse> obtenerPorId(@PathVariable UUID id) {
+    public ResponseEntity<TarifaPorVolumenResponse> obtenerPorId(@PathVariable("id") UUID id) {
         TarifaPorVolumen tarifa = service.obtenerPorId(id);
         return ResponseEntity.ok(toResponse(tarifa));
     }
@@ -98,7 +98,7 @@ public class TarifaPorVolumenController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<TarifaPorVolumenResponse> actualizar(
-            @PathVariable UUID id,
+            @PathVariable("id") UUID id,
             @Valid @RequestBody TarifaPorVolumenRequest request) {
         TarifaPorVolumen tarifa = toEntity(request);
         TarifaPorVolumen actualizada = service.actualizar(id, tarifa);
@@ -111,7 +111,7 @@ public class TarifaPorVolumenController {
      */
     @PatchMapping("/{id}/estado")
     public ResponseEntity<TarifaPorVolumenResponse> cambiarEstado(
-            @PathVariable UUID id,
+            @PathVariable("id") UUID id,
             @RequestParam("activa") boolean activa) {
         TarifaPorVolumen tarifa = service.cambiarEstado(id, activa);
         return ResponseEntity.ok(toResponse(tarifa));
@@ -122,7 +122,7 @@ public class TarifaPorVolumenController {
      * Elimina una tarifa
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
+    public ResponseEntity<Void> eliminar(@PathVariable("id") UUID id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
     }
